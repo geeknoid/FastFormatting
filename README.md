@@ -17,6 +17,16 @@ This code is designed to eventually be put into the .NET libraries. As such,
 I liberally borrowed private code from the .NET libraries, you'll find those 
 files in the FastFormatting/Borrowed folder.
 
+Here's output from the benchmark:
+
+```
+|              Method |     Mean |    Error |   StdDev |     Gen 0 |     Gen 1 |    Gen 2 | Allocated |
+|-------------------- |---------:|---------:|---------:|----------:|----------:|---------:|----------:|
+|    TestStringFormat | 52.13 ms | 1.016 ms | 1.611 ms | 3100.0000 | 1300.0000 | 400.0000 |  16.02 MB |
+| TestStringFormatter | 25.95 ms | 0.470 ms | 0.894 ms | 2187.5000 |  906.2500 | 281.2500 |  11.44 MB |
+|   TestInterpolation | 51.68 ms | 0.921 ms | 1.350 ms | 3100.0000 | 1300.0000 | 400.0000 |  16.02 MB |
+```
+
 # Example
 
 ```csharp
