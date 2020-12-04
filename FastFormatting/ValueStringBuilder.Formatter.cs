@@ -23,7 +23,7 @@ namespace System.Text
                     continue;
                 }
 
-                string argFormat = segments[i].Format ?? string.Empty;
+                string argFormat = segments[i].Format;
                 ReadOnlySpan<char> result = default;
                 bool freshSpan = false;
 
@@ -80,8 +80,16 @@ namespace System.Text
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ApplyPadding(in FormatterSegment segment, ReadOnlySpan<char> result, bool freshSpan)
         {
-            var leftJustify = segment.LeftJustify;
-            int padding = (segment.Width - result.Length);
+            var width = (int)segment.Width;
+            var leftJustify = true;
+
+            if (width < 0)
+            {
+                width = -width;
+                leftJustify = false;
+            }
+
+            int padding = (width - result.Length);
 
             if (padding > 0)
             {

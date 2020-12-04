@@ -10,7 +10,7 @@ and then during execution your code can use the static StringFormatter instances
 to actually format arguments.
 
 * The StringFormatter.Format API avoids boxing for up to 3 formatting arguments.
-In the case, the API does only a single allocation for the final string and typically
+In that case, the API does only a single allocation for the final string and typically
 has no other intermediate allocations.
 
 This code is designed to eventually be put into the .NET libraries. As such,

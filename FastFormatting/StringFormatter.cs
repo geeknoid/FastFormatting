@@ -22,32 +22,32 @@ namespace System.Text
         /// <summary>
         /// Parses a composite format string into an efficient form for later use.
         /// </summary>
-        public StringFormatter(string compositeFormat)
+        public StringFormatter(string format)
         {
-            if (compositeFormat == null)
+            if (format == null)
             {
-                throw new ArgumentNullException(nameof(compositeFormat));
+                throw new ArgumentNullException(nameof(format));
             }
 
             int pos = 0;
-            int len = compositeFormat.Length;
+            int len = format.Length;
             char ch = '\0';
             StringBuilder? tmp = null;
             var segments = new List<FormatterSegment>();
-            int argCount = 0;
-            StringBuilder literal = new StringBuilder(compositeFormat.Length);
+            int numArgs = 0;
+            var literal = new ValueStringBuilder(format.Length);
 
             for (; ; )
             {
                 int segStart = literal.Length;
                 while (pos < len)
                 {
-                    ch = compositeFormat[pos];
+                    ch = format[pos];
 
                     pos++;
                     if (ch == '}')
                     {
-                        if (pos < len && compositeFormat[pos] == '}')
+                        if (pos < len && format[pos] == '}')
                         {
                             // double }, treat as escape sequence
                             pos++;
@@ -60,7 +60,7 @@ namespace System.Text
                     }
                     else if (ch == '{')
                     {
-                        if (pos < len && compositeFormat[pos] == '{')
+                        if (pos < len && format[pos] == '{')
                         {
                             // double {, treat as escape sequence
                             pos++;
@@ -82,12 +82,12 @@ namespace System.Text
                     while (total > 0)
                     {
                         int num = total;
-                        if (num > byte.MaxValue)
+                        if (num > short.MaxValue)
                         {
-                            num = byte.MaxValue;
+                            num = short.MaxValue;
                         }
 
-                        segments.Add(FormatterSegment.Literal((byte)num));
+                        segments.Add(FormatterSegment.Literal((short)num));
                         total -= num;
                     }
                     continue;
@@ -97,19 +97,13 @@ namespace System.Text
                 {
                     // done
                     _literalString = literal.ToString();
-                    _numArgs = argCount;
-
-                    FormatterSegment[] a = new FormatterSegment[segments.Count];
-                    for (int i = 0; i < segments.Count; i++)
-                    {
-                        a[i] = segments[i];
-                    }
-                    _segments = a;
+                    _numArgs = numArgs;
+                    _segments = segments.ToArray();
                     return;
                 }
 
                 pos++;
-                if (pos == len || (ch = compositeFormat[pos]) < '0' || ch > '9')
+                if (pos == len || (ch = format[pos]) < '0' || ch > '9')
                 {
                     // we need an argument index
                     //                    Release.Fail("Missing argument index in format string.");
@@ -125,17 +119,17 @@ namespace System.Text
                     // make sure we get a suitable end to the argument index
                     //                  Release.Assert(pos != len, "Invalid argument index.");
 
-                    ch = compositeFormat[pos];
+                    ch = format[pos];
                 } while (ch >= '0' && ch <= '9');
 
-                if (index >= argCount)
+                if (index >= numArgs)
                 {
                     // new max arg count
-                    argCount = index + 1;
+                    numArgs = index + 1;
                 }
 
                 // skip whitespace
-                while (pos < len && (ch = compositeFormat[pos]) == ' ')
+                while (pos < len && (ch = format[pos]) == ' ')
                 {
                     pos++;
                 }
@@ -148,7 +142,7 @@ namespace System.Text
                     pos++;
 
                     // skip whitespace
-                    while (pos < len && compositeFormat[pos] == ' ')
+                    while (pos < len && format[pos] == ' ')
                     {
                         pos++;
                     }
@@ -156,8 +150,7 @@ namespace System.Text
                     // did we run out of steam
                     //                Release.Assert(pos != len, "Invalid format specification.");
 
-                    bool dynamicWidth = false;
-                    ch = compositeFormat[pos];
+                    ch = format[pos];
                     if (ch == '-')
                     {
                         leftJustify = true;
@@ -166,17 +159,7 @@ namespace System.Text
                         // did we run out of steam?
                         //                  Release.Assert(pos != len, "Invalid format specification.");
 
-                        ch = compositeFormat[pos];
-                    }
-                    else if (ch == '*')
-                    {
-                        dynamicWidth = true;
-                        pos++;
-
-                        // did we run out of steam?
-                        //                Release.Assert(pos != len, "Invalid format specification.");
-
-                        ch = compositeFormat[pos];
+                        ch = format[pos];
                     }
 
                     //          Release.Assert(ch >= '0' && ch <= '9', "Invalid character in field width specification.");
@@ -191,33 +174,16 @@ namespace System.Text
                         //            Release.Assert(pos != len, "Invalid format specification.");
 
                         // did we get a number that's too big?
-                        if (!dynamicWidth)
-                        {
-                            //Release.Assert(val < MaxWidth, "Field width value exceeds limit.");
-                        }
+                        //Release.Assert(val < MaxWidth, "Field width value exceeds limit.");
 
-                        ch = compositeFormat[pos];
+                        ch = format[pos];
                     } while (ch >= '0' && ch <= '9');
 
-                    if (dynamicWidth)
-                    {
-                        // indicates the width is in fact an arg index
-                        width = -val;
-
-                        if (val >= argCount)
-                        {
-                            // new arg count
-                            argCount = val + 1;
-                        }
-                    }
-                    else
-                    {
-                        width = val;
-                    }
+                    width = val;
                 }
 
                 // skip whitespace
-                while (pos < len && (ch = compositeFormat[pos]) == ' ')
+                while (pos < len && (ch = format[pos]) == ' ')
                 {
                     pos++;
                 }
@@ -242,11 +208,11 @@ namespace System.Text
 
                         //          Release.Assert(pos != len, "Invalid format specification.");
 
-                        ch = compositeFormat[pos];
+                        ch = format[pos];
                         pos++;
                         if (ch == '{')
                         {
-                            if (pos < len && compositeFormat[pos] == '{')
+                            if (pos < len && format[pos] == '{')
                             {
                                 // double {, an escape sequence
                                 pos++;
@@ -258,7 +224,7 @@ namespace System.Text
                         }
                         else if (ch == '}')
                         {
-                            if (pos < len && compositeFormat[pos] == '}')
+                            if (pos < len && format[pos] == '}')
                             {
                                 // double }, an escape sequence
                                 pos++;
@@ -269,37 +235,6 @@ namespace System.Text
                                 pos--;
                                 break;
                             }
-                        }
-                        else if (ch == '*')
-                        {
-                            // argument list reference
-
-                            tmp.Append('*');
-                            int val = 0;
-                            for (; ; )
-                            {
-                                ch = compositeFormat[pos];
-                                if (ch < '0' || ch > '9')
-                                {
-                                    break;
-                                }
-
-                                val = (val * 10) + (ch - '0');
-                                pos++;
-
-                                // did we run out of steam?
-                                //             Release.Assert(pos != len, "Invalid format specification.");
-
-                                tmp.Append(ch);
-                            }
-
-                            if (val >= argCount)
-                            {
-                                // new arg count
-                                argCount = val + 1;
-                            }
-
-                            continue;
                         }
 
                         tmp.Append(ch);
@@ -312,7 +247,7 @@ namespace System.Text
                 pos++;
 
                 // process the optional format string
-                string? fmtStr = null;
+                string fmtStr = string.Empty;
                 if ((tmp != null) && (tmp.Length > 0))
                 {
                     fmtStr = tmp.ToString();
@@ -321,7 +256,12 @@ namespace System.Text
 
                 //                Release.Assert(argCount <= byte.MaxValue, "Must have less than 256 arguments");
 
-                segments.Add(FormatterSegment.Full(fmtStr, (short)width, leftJustify, (byte)index));
+                if (!leftJustify)
+                {
+                    width = -width;
+                }
+
+                segments.Add(FormatterSegment.Full(fmtStr, (short)width, (short)index));
             }
         }
 
