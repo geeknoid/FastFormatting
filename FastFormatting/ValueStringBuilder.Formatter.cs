@@ -3,7 +3,6 @@
 namespace System.Text
 {
     using System;
-    using System.ComponentModel;
     using System.Runtime.CompilerServices;
 
     internal ref partial struct ValueStringBuilder
@@ -13,41 +12,43 @@ namespace System.Text
             int literalIndex = 0;
             for (int i = 0; i < segments.Length; i++)
             {
-                int count = segments[i].LiteralCount;
-                if (count > 0)
+                int literalCount = segments[i].LiteralCount;
+                if (literalCount > 0)
                 {
                     // the segment is a literal
-                    var substring = literalString.AsSpan(literalIndex, count);
+                    var substring = literalString.AsSpan(literalIndex, literalCount);
                     Append(substring);
-                    literalIndex += count;
-                    continue;
+                    literalIndex += literalCount;
                 }
 
-                string argFormat = segments[i].Format;
-                ReadOnlySpan<char> result = default;
-                bool freshSpan = false;
-
-                int argNum = segments[i].ArgIndex;
-                switch (argNum)
+                var argIndex = segments[i].ArgIndex;
+                if (argIndex >= 0)
                 {
-                    case 0:
-                        result = HandleArg(pa.Arg0, argFormat, provider, out freshSpan);
-                        break;
+                    string argFormat = segments[i].Format;
+                    ReadOnlySpan<char> result = default;
+                    bool freshSpan = false;
 
-                    case 1:
-                        result = HandleArg(pa.Arg1, argFormat, provider, out freshSpan);
-                        break;
+                    switch (argIndex)
+                    {
+                        case 0:
+                            result = HandleArg(pa.Arg0, argFormat, provider, out freshSpan);
+                            break;
 
-                    case 2:
-                        result = HandleArg(pa.Arg2, argFormat, provider, out freshSpan);
-                        break;
+                        case 1:
+                            result = HandleArg(pa.Arg1, argFormat, provider, out freshSpan);
+                            break;
 
-                    default:
-                        result = HandleArg(pa.Args[argNum - 3], argFormat, provider, out freshSpan);
-                        break;
+                        case 2:
+                            result = HandleArg(pa.Arg2, argFormat, provider, out freshSpan);
+                            break;
+
+                        default:
+                            result = HandleArg(pa.Args[argIndex - 3], argFormat, provider, out freshSpan);
+                            break;
+                    }
+
+                    ApplyPadding(in segments[i], result, freshSpan);
                 }
-
-                ApplyPadding(in segments[i], result, freshSpan);
             }
         }
 

@@ -17,12 +17,12 @@ namespace System.Text
 
         public static FormatterSegment Literal(short literalCount)
         {
-            return new FormatterSegment(string.Empty, 0, literalCount, 0);
+            return new FormatterSegment(string.Empty, 0, literalCount, -1);
         }
 
         public static FormatterSegment Full(string format, short width, short argIndex)
         {
-            return new FormatterSegment(format, width, 0, argIndex);
+            return new FormatterSegment(format, width, -1, argIndex);
         }
 
         /// <summary>
