@@ -225,6 +225,7 @@ namespace System.Text
             _pos += count;
         }
 
+#if false
         public unsafe void Append(char* value, int length)
         {
             int pos = _pos;
@@ -240,7 +241,7 @@ namespace System.Text
             }
             _pos += length;
         }
-
+#endif
         public void Append(ReadOnlySpan<char> value)
         {
             int pos = _pos;
