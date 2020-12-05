@@ -38,5 +38,4 @@ Here's output from the benchmark:
 # Implementation Todos
 
 * Support formatting to a span, for completely no-alloc usage
-* Make it so a FormatterSegment carries both a literal preamble and an argument format, to reduce the # of segments we keep
-* Add API docs
+* Add more unit tests

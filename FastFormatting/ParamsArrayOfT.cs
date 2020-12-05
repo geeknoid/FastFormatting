@@ -2,6 +2,12 @@
 
 namespace System
 {
+    /// <summary>
+    /// Non-boxing holder of multiple parameters
+    /// </summary>
+    /// <remarks>
+    /// Holds 3 values in strongly-typed storage, along with extra arguments as a span of objects.
+    /// </remarks>
     internal readonly ref struct ParamsArray<T0, T1, T2>
     {
         private readonly T0 _arg0;

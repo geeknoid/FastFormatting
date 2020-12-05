@@ -47,7 +47,7 @@ namespace System.Text
                             break;
                     }
 
-                    ApplyPadding(in segments[i], result, freshSpan);
+                    ApplyPadding(segments[i].Width, result, freshSpan);
                 }
             }
         }
@@ -79,9 +79,8 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ApplyPadding(in FormatterSegment segment, ReadOnlySpan<char> result, bool freshSpan)
+        private void ApplyPadding(int width, ReadOnlySpan<char> result, bool freshSpan)
         {
-            var width = (int)segment.Width;
             var leftJustify = true;
 
             if (width < 0)

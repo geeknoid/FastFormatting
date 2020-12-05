@@ -6,12 +6,22 @@ namespace System.Text
     using System.Collections.Generic;
 
     /// <summary>
-    /// Holds the pre-parsed representation of a composite format string.
+    /// Provides highly efficient string formatting functionality.
     /// </summary>
     /// <remarks>
-    /// For code that needs to repeatedly perform string formatting against the same composite format
-    /// string, it is considerably more efficient to parse and validate the composite format string only
-    /// once and then quickly format the inputs accordingly.
+    /// This class lets you optimize string formatting operations common with the <see cref="String.Format"  />
+    /// method. This is useful for any situation where you need to repeatedly format the same string with 
+    /// different arguments.
+    /// 
+    /// This class works faster than String.Format because it parses the composite format string only once when
+    /// the instance is created, rather than doing it for every formatting operation.
+    /// 
+    /// You first create an instance of this class, passing the composite format string that you intend to use.
+    /// Once the instance is created, you can call the <see cref="Format"/> method with arguments to use in the
+    /// format operation.
+    /// 
+    /// Note that if you're only formatting a single string, it is more efficient to just use String.Format. This 
+    /// class is meant for repeated use.
     /// </remarks>
     public partial class StringFormatter
     {
@@ -77,25 +87,21 @@ namespace System.Text
                     literal.Append(ch);
                 }
 
-                int total = literal.Length - segStart;
-                if (total > 0)
+                if (pos == len)
                 {
-                    while (total > 0)
+                    int totalLit = literal.Length - segStart;
+                    while (totalLit > 0)
                     {
-                        int num = total;
+                        int num = totalLit;
                         if (num > short.MaxValue)
                         {
                             num = short.MaxValue;
                         }
 
-                        segments.Add(FormatterSegment.Literal((short)num));
-                        total -= num;
+                        segments.Add(new FormatterSegment(string.Empty, 0, (short)num, -1));
+                        totalLit -= num;
                     }
-                    continue;
-                }
 
-                if (pos == len)
-                {
                     // done
                     _literalString = literal.ToString();
                     _numArgs = numArgs;
@@ -276,7 +282,14 @@ namespace System.Text
                     width = -width;
                 }
 
-                segments.Add(FormatterSegment.Full(fmtStr, (short)width, (short)index));
+                int total = literal.Length - segStart;
+                while (total > short.MaxValue)
+                {
+                    segments.Add(new FormatterSegment(string.Empty, 0, short.MaxValue, -1));
+                    total -= short.MaxValue;
+                }
+
+                segments.Add(new FormatterSegment(fmtStr, (short)width, (short)total, (short)index));
             }
         }
 
@@ -284,6 +297,12 @@ namespace System.Text
         {
         }
 
+        /// <summary>
+        /// Format a string with a single argument.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg">An argument to use in the formatting operation.</param>
+        /// <returns>The formatting string.</returns>
         public string Format<T>(IFormatProvider? provider, T arg)
         {
             if (_numArgs != 1)
@@ -295,6 +314,13 @@ namespace System.Text
             return Format(provider, in pa);
         }
 
+        /// <summary>
+        /// Formats a string with two arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <returns>The formatting string.</returns>
         public string Format<T0, T1>(IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             if (_numArgs != 2)
@@ -306,6 +332,14 @@ namespace System.Text
             return Format(provider, in pa);
         }
 
+        /// <summary>
+        /// Formats a string with three arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <param name="arg2">An argument to use in the formatting operation.</param>
+        /// <returns>The formatting string.</returns>
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             if (_numArgs != 3)
@@ -317,6 +351,15 @@ namespace System.Text
             return Format(provider, in pa);
         }
 
+        /// <summary>
+        /// Formats a string with arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <param name="arg2">An argument to use in the formatting operation.</param>
+        /// <param name="args">Additional arguments to use in the formatting operation.</param>
+        /// <returns>The formatting string.</returns>
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             if (args == null)
@@ -334,6 +377,12 @@ namespace System.Text
             return Format(provider, in pa);
         }
 
+        /// <summary>
+        /// Formats a string with arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="args">Arguments to use in the formatting operation.</param>
+        /// <returns>The formatting string.</returns>
         public string Format(IFormatProvider? provider, params object?[]? args)
         {
             if (args == null || args.Length == 0)

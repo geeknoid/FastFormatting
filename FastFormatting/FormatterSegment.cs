@@ -7,22 +7,12 @@ namespace System.Text
     /// </summary>
     internal readonly struct FormatterSegment
     {
-        FormatterSegment(string format, short width, short literalCount, short argIndex)
+        public FormatterSegment(string format, short width, short literalCount, short argIndex)
         {
             Format = format;
             Width = width;
             LiteralCount = literalCount;
             ArgIndex = argIndex;
-        }
-
-        public static FormatterSegment Literal(short literalCount)
-        {
-            return new FormatterSegment(string.Empty, 0, literalCount, -1);
-        }
-
-        public static FormatterSegment Full(string format, short width, short argIndex)
-        {
-            return new FormatterSegment(format, width, -1, argIndex);
         }
 
         /// <summary>
@@ -31,7 +21,7 @@ namespace System.Text
         public short LiteralCount { get; }
 
         /// <summary>
-        /// The index of the argument to be formatted.
+        /// The index of the argument to be formatted, -1 to skip argument formatting.
         /// </summary>
         public short ArgIndex { get; }
 
