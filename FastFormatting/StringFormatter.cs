@@ -523,9 +523,8 @@ namespace System.Text
                     throw new ArgumentException($"Expected {_numArgs} arguments, but got 0", nameof(args));
                 }
 
-                // BUGBUG: overflow case
                 _literalString.AsSpan().CopyTo(destination);
-                charsWritten = _literalString.Length;
+                charsWritten = Math.Min(_literalString.Length, destination.Length);
                 return true;
             }
 
@@ -556,9 +555,16 @@ namespace System.Text
 
         private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
         {
-            // BUGBUG: overflow case
             var formatter = new ValueStringBuilder(destination);
             formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
+            
+            if (formatter.Length > destination.Length)
+            {
+                // there was a reallocation, so the output didn't fit...
+                charsWritten = 0;
+                return false;
+            }
+
             charsWritten = formatter.Length;
             return true;
         }

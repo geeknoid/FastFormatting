@@ -43,6 +43,4 @@ Here's output from the benchmark:
 # Implementation Todos
 
 * Add more unit tests
-* Add support for more primitive types to avoid boxing them
-* Handle the BUGBUG span overflow cases in the TryFormat implementation.
 * Add docs for the TryFormat family of functions.

@@ -54,14 +54,55 @@ namespace System.Text
 
         private ReadOnlySpan<char> HandleArg<T>(T arg, string argFormat, IFormatProvider? provider, out bool freshSpan)
         {
+            freshSpan = false;
             switch (arg)
             {
                 case int a:
-                    freshSpan = false;
+                    return Append(a, argFormat, provider);
+
+                case long a:
+                    return Append(a, argFormat, provider);
+
+                case double a:
+                    return Append(a, argFormat, provider);
+
+                case float a:
+                    return Append(a, argFormat, provider);
+
+                case uint a:
+                    return Append(a, argFormat, provider);
+
+                case ulong a:
+                    return Append(a, argFormat, provider);
+
+                case short a:
+                    return Append(a, argFormat, provider);
+
+                case ushort a:
+                    return Append(a, argFormat, provider);
+
+                case byte a:
+                    return Append(a, argFormat, provider);
+
+                case sbyte a:
+                    return Append(a, argFormat, provider);
+
+                case bool a:
+                    return Append(a);
+
+                case DateTime a:
+                    return Append(a, argFormat, provider);
+
+                case TimeSpan a:
+                    return Append(a, argFormat, provider);
+
+                case Guid a:
+                    return Append(a, argFormat);
+
+                case decimal a:
                     return Append(a, argFormat, provider);
 
                 case ISpanFormattable a:
-                    freshSpan = false;
                     return Append(a, argFormat, provider);
 
                 case IFormattable a:
@@ -73,7 +114,6 @@ namespace System.Text
                     return a.ToString();
 
                 default:
-                    freshSpan = false;
                     return Array.Empty<char>();
             }
         }
@@ -118,7 +158,126 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(int value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        private ReadOnlySpan<char> Append(long value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format, provider))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(ulong value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format, provider))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(bool value)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(DateTime value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format, provider))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(TimeSpan value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format, provider))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(decimal value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format, provider))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(Guid value, ReadOnlySpan<char> format)
+        {
+            var s = _chars.Slice(_pos);
+            int charsWritten;
+
+            while (!value.TryFormat(s, out charsWritten, format))
+            {
+                EnsureCapacity(s.Length * 2);
+                s = _chars.Slice(_pos);
+            }
+
+            s = _chars.Slice(_pos, charsWritten);
+            _pos += charsWritten;
+            return s;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ReadOnlySpan<char> Append(double value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
