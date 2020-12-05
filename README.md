@@ -18,7 +18,7 @@ has no other intermediate allocations.
 as C's sprintf function!'
 
 This code is designed to eventually be put into the .NET libraries. As such,
-I liberally borrowed private code from the .NET libraries, you'll find those 
+I borrowed a bit of private code from the .NET libraries, you'll find those 
 files in the FastFormatting/Borrowed folder.
 
 Here's output from the benchmark:

@@ -7,6 +7,12 @@ namespace System.Text
 
     internal ref partial struct ValueStringBuilder
     {
+        // Given this has 3 generics, it can lead to a lot of jitted code. We thus keep
+        // the work done in here to a strict minimum, and dispatch to lower-arity methods
+        // ASAP.
+        //
+        // This code assumes there are sufficient arguments in the ParamsArray to satisfy the needs
+        // of the format operation, so the upstream callers should validate this a priori.
         public void Format<T0, T1, T2>(IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa, FormatterSegment[] segments, string literalString)
         {
             int literalIndex = 0;
@@ -16,8 +22,7 @@ namespace System.Text
                 if (literalCount > 0)
                 {
                     // the segment has some literal text
-                    var substring = literalString.AsSpan(literalIndex, literalCount);
-                    Append(substring);
+                    Append(literalString.AsSpan(literalIndex, literalCount));
                     literalIndex += literalCount;
                 }
 
@@ -28,19 +33,19 @@ namespace System.Text
                     switch (argIndex)
                     {
                         case 0:
-                            HandleArg(pa.Arg0, segment.Format, segment.Width, provider);
+                            HandleArg(pa.Arg0, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         case 1:
-                            HandleArg(pa.Arg1, segment.Format, segment.Width, provider);
+                            HandleArg(pa.Arg1, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         case 2:
-                            HandleArg(pa.Arg2, segment.Format, segment.Width, provider);
+                            HandleArg(pa.Arg2, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         default:
-                            HandleReferenceArg(pa.Args[argIndex - 3], segment.Format, segment.Width, provider);
+                            HandleReferenceArg(pa.Args[argIndex - 3], segment.ArgFormat, segment.ArgWidth, provider);
                             break;
                     }
                 }

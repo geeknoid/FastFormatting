@@ -7,16 +7,16 @@ namespace System.Text
     /// </summary>
     internal readonly struct FormatterSegment
     {
-        public FormatterSegment(string format, short width, short literalCount, short argIndex)
+        public FormatterSegment(short literalCount, short argIndex, short argWidth, string argFormat)
         {
-            Format = format;
-            Width = width;
             LiteralCount = literalCount;
             ArgIndex = argIndex;
+            ArgWidth = argWidth;
+            ArgFormat = argFormat;
         }
 
         /// <summary>
-        /// The number of bytes of literal text consumed by this segment.
+        /// The number of chars of literal text consumed by this segment.
         /// </summary>
         public short LiteralCount { get; }
 
@@ -29,11 +29,11 @@ namespace System.Text
         /// The width of the formatted value in characters. If this is negative, it indicates to right-justify
         /// and the field width is then the absolute value.
         /// </summary>
-        public short Width { get; }
+        public short ArgWidth { get; }
 
         /// <summary>
-        /// The custom format string to format the argument with.
+        /// The custom format string to use when formatting the argument.
         /// </summary>
-        public string Format { get; }
+        public string ArgFormat { get; }
     }
 }

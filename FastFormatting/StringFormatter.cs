@@ -25,9 +25,9 @@ namespace System.Text
     /// </remarks>
     public partial class StringFormatter
     {
-        readonly FormatterSegment[] _segments;
-        readonly string _literalString;
-        readonly int _numArgs;
+        readonly FormatterSegment[] _segments;  // info on the different chunks to process
+        readonly string _literalString;         // all literal text to be inserted into the output
+        readonly int _numArgs;                  // # args needed during format
 
         private const int MaxStackAlloc = 128;  // = 256 bytes
 
@@ -98,7 +98,7 @@ namespace System.Text
                             num = short.MaxValue;
                         }
 
-                        segments.Add(new FormatterSegment(string.Empty, 0, (short)num, -1));
+                        segments.Add(new FormatterSegment((short)num, -1, 0, string.Empty));
                         totalLit -= num;
                     }
 
@@ -117,10 +117,10 @@ namespace System.Text
                 }
 
                 // extract the argument index
-                int index = 0;
+                int argIndex = 0;
                 do
                 {
-                    index = (index * 10) + (ch - '0');
+                    argIndex = (argIndex * 10) + (ch - '0');
                     pos++;
 
                     // make sure we get a suitable end to the argument index
@@ -132,10 +132,10 @@ namespace System.Text
                     ch = format[pos];
                 } while (ch >= '0' && ch <= '9');
 
-                if (index >= numArgs)
+                if (argIndex >= numArgs)
                 {
                     // new max arg count
-                    numArgs = index + 1;
+                    numArgs = argIndex + 1;
                 }
 
                 // skip whitespace
@@ -146,7 +146,7 @@ namespace System.Text
 
                 // parse the optional field width
                 bool leftJustify = false;
-                int width = 0;
+                int argWidth = 0;
                 if (ch == ',')
                 {
                     pos++;
@@ -204,7 +204,7 @@ namespace System.Text
                         ch = format[pos];
                     } while (ch >= '0' && ch <= '9');
 
-                    width = val;
+                    argWidth = val;
                 }
 
                 // skip whitespace
@@ -215,7 +215,7 @@ namespace System.Text
 
                 // parse the optional custom format string
 
-                string fmtStr = string.Empty;
+                string argFormat = string.Empty;
                 if (ch == ':')
                 {
                     pos++;
@@ -260,7 +260,7 @@ namespace System.Text
 
                     if (pos != argFormatStart)
                     {
-                        fmtStr = format.Substring(argFormatStart, pos - argFormatStart);
+                        argFormat = format.Substring(argFormatStart, pos - argFormatStart);
                     }
                 }
 
@@ -279,17 +279,17 @@ namespace System.Text
 
                 if (!leftJustify)
                 {
-                    width = -width;
+                    argWidth = -argWidth;
                 }
 
                 int total = literal.Length - segStart;
                 while (total > short.MaxValue)
                 {
-                    segments.Add(new FormatterSegment(string.Empty, 0, short.MaxValue, -1));
+                    segments.Add(new FormatterSegment(short.MaxValue, -1, 0, string.Empty));
                     total -= short.MaxValue;
                 }
 
-                segments.Add(new FormatterSegment(fmtStr, (short)width, (short)total, (short)index));
+                segments.Add(new FormatterSegment((short)total, (short)argIndex, (short)argWidth, argFormat));
             }
         }
 
