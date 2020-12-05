@@ -297,6 +297,20 @@ namespace System.Text
         {
         }
 
+        private void CheckNumArgs(int explicitCount, object?[]? args)
+        {
+            int total = explicitCount;
+            if (args != null)
+            {
+                total += args.Length;
+            }
+
+            if (_numArgs != total)
+            {
+                throw new ArgumentException($"Expected {_numArgs} arguments, but got {total}");
+            }
+        }
+
         /// <summary>
         /// Format a string with a single argument.
         /// </summary>
@@ -305,11 +319,7 @@ namespace System.Text
         /// <returns>The formatting string.</returns>
         public string Format<T>(IFormatProvider? provider, T arg)
         {
-            if (_numArgs != 1)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 1");
-            }
-
+            CheckNumArgs(1, null);
             var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
             return Format(provider, in pa);
         }
@@ -323,11 +333,7 @@ namespace System.Text
         /// <returns>The formatting string.</returns>
         public string Format<T0, T1>(IFormatProvider? provider, T0 arg0, T1 arg1)
         {
-            if (_numArgs != 2)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 2");
-            }
-
+            CheckNumArgs(2, null);
             var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
             return Format(provider, in pa);
         }
@@ -342,11 +348,7 @@ namespace System.Text
         /// <returns>The formatting string.</returns>
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
-            if (_numArgs != 3)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 3");
-            }
-
+            CheckNumArgs(3, null);
             var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
             return Format(provider, in pa);
         }
@@ -362,17 +364,7 @@ namespace System.Text
         /// <returns>The formatting string.</returns>
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
-            if (args == null)
-            {
-                args = Array.Empty<object>();
-            }
-
-            var suppliedArgs = 3 + args.Length;
-            if (_numArgs != suppliedArgs)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got {suppliedArgs}", nameof(args));
-            }
-
+            CheckNumArgs(3, args);
             var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
             return Format(provider, in pa);
         }
@@ -385,32 +377,28 @@ namespace System.Text
         /// <returns>The formatting string.</returns>
         public string Format(IFormatProvider? provider, params object?[]? args)
         {
-            if (args == null || args.Length == 0)
+            CheckNumArgs(0, args);
+
+            if (_numArgs == 0)
             {
-                if (_numArgs != 0)
-                {
-                    throw new ArgumentException($"Expected {_numArgs} arguments, but got 0", nameof(args));
-                }
                 return _literalString;
             }
 
-            if (_numArgs != args.Length)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got {args.Length}", nameof(args));
-            }
-
             ParamsArray<object?, object?, object?> pa;
-            switch (args.Length)
+            switch (args!.Length)
             {
                 case 1:
                     pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
                     break;
+
                 case 2:
                     pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
                     break;
+                
                 case 3:
                     pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
                     break;
+                
                 default:
                     pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
                     break;
@@ -419,7 +407,139 @@ namespace System.Text
             return Format(provider, in pa);
         }
 
+        /// <summary>
+        /// Formats a string with one argument.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg">An argument to use in the formatting operation.</param>
+        /// <param name="destination">Where to write the resulting string.</param>
+        /// <param name="charsWritten">The number of characters actually written to the destination span.</param>
+        /// <returns>True if there was enough room in teh destination span for the resulting string..</returns>
+        public bool TryFormat<T>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T arg)
+        {
+            CheckNumArgs(1, null);
+            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
+            return TryFormat(destination, out charsWritten, provider, in pa);
+        }
+
+        /// <summary>
+        /// Formats a string with two arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <param name="destination">Where to write the resulting string.</param>
+        /// <param name="charsWritten">The number of characters actually written to the destination span.</param>
+        /// <returns>True if there was enough room in teh destination span for the resulting string..</returns>
+        public bool TryFormat<T0, T1>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1)
+        {
+            CheckNumArgs(2, null);
+            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
+            return TryFormat(destination, out charsWritten, provider, in pa);
+        }
+
+        /// <summary>
+        /// Formats a string with three arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <param name="arg2">An argument to use in the formatting operation.</param>
+        /// <param name="destination">Where to write the resulting string.</param>
+        /// <param name="charsWritten">The number of characters actually written to the destination span.</param>
+        /// <returns>True if there was enough room in teh destination span for the resulting string..</returns>
+        public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
+        {
+            CheckNumArgs(3, null);
+            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
+            return TryFormat(destination, out charsWritten, provider, in pa);
+        }
+
+        /// <summary>
+        /// Formats a string with arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="arg0">An argument to use in the formatting operation.</param>
+        /// <param name="arg1">An argument to use in the formatting operation.</param>
+        /// <param name="arg2">An argument to use in the formatting operation.</param>
+        /// <param name="args">Additional arguments to use in the formatting operation.</param>
+        /// <param name="destination">Where to write the resulting string.</param>
+        /// <param name="charsWritten">The number of characters actually written to the destination span.</param>
+        /// <returns>True if there was enough room in teh destination span for the resulting string..</returns>
+        public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
+        {
+            CheckNumArgs(3, args);
+            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
+            return TryFormat(destination, out charsWritten, provider, in pa);
+        }
+
+        /// <summary>
+        /// Formats a string with arguments.
+        /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
+        /// <param name="args">Arguments to use in the formatting operation.</param>
+        /// <param name="destination">Where to write the resulting string.</param>
+        /// <param name="charsWritten">The number of characters actually written to the destination span.</param>
+        /// <returns>True if there was enough room in teh destination span for the resulting string..</returns>
+        public bool TryFormat(Span<char> destination, out int charsWritten, IFormatProvider? provider, params object?[]? args)
+        {
+            CheckNumArgs(0, args);
+
+            if (_numArgs == 0)
+            {
+                _literalString.AsSpan().CopyTo(destination);
+                charsWritten = Math.Min(_literalString.Length, destination.Length);
+                return destination.Length > _literalString.Length;
+            }
+
+            ParamsArray<object?, object?, object?> pa;
+            switch (args!.Length)
+            {
+                case 1:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
+                    break;
+
+                case 2:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
+                    break;
+                
+                case 3:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
+                    break;
+                
+                default:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
+                    break;
+            }
+
+            return TryFormat(destination, out charsWritten, provider, in pa);
+        }
+
         private string Format<T0, T1, T2>(IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        {
+            int estimatedSize = EstimateResultSize(in pa);
+            var formatter = (estimatedSize >= MaxStackAlloc) ? new ValueStringBuilder(estimatedSize) : new ValueStringBuilder(stackalloc char[MaxStackAlloc]);
+            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
+            return formatter.ToString();
+        }
+
+        private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        {
+            var formatter = new ValueStringBuilder(destination);
+            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
+            
+            if (formatter.Length > destination.Length)
+            {
+                // there was a reallocation, so the output didn't fit...
+                charsWritten = 0;
+                return false;
+            }
+
+            charsWritten = formatter.Length;
+            return true;
+        }
+
+        private int EstimateResultSize<T0, T1, T2>(in ParamsArray<T0, T1, T2> pa)
         {
             // make a guesstimate at the size of the buffer we need for output
             int estimatedSize = _literalString.Length + _numArgs * 16;
@@ -459,122 +579,12 @@ namespace System.Text
                 }
             }
 
-            var formatter = (estimatedSize >= MaxStackAlloc) ? new ValueStringBuilder(estimatedSize) : new ValueStringBuilder(stackalloc char[MaxStackAlloc]);
-            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
-            return formatter.ToString();
-        }
-
-        public bool TryFormat<T>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T arg)
-        {
-            if (_numArgs != 1)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 1");
-            }
-
-            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        public bool TryFormat<T0, T1>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1)
-        {
-            if (_numArgs != 2)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 2");
-            }
-
-            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
-        {
-            if (_numArgs != 3)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got 3");
-            }
-
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
-        {
-            if (args == null)
-            {
-                args = Array.Empty<object>();
-            }
-
-            var suppliedArgs = 3 + args.Length;
-            if (_numArgs != suppliedArgs)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got {suppliedArgs}", nameof(args));
-            }
-
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        public bool TryFormat(Span<char> destination, out int charsWritten, IFormatProvider? provider, params object?[]? args)
-        {
-            if (args == null || args.Length == 0)
-            {
-                if (_numArgs != 0)
-                {
-                    throw new ArgumentException($"Expected {_numArgs} arguments, but got 0", nameof(args));
-                }
-
-                _literalString.AsSpan().CopyTo(destination);
-                charsWritten = Math.Min(_literalString.Length, destination.Length);
-                return true;
-            }
-
-            if (_numArgs != args.Length)
-            {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got {args.Length}", nameof(args));
-            }
-
-            ParamsArray<object?, object?, object?> pa;
-            switch (args.Length)
-            {
-                case 1:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
-                    break;
-                case 2:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
-                    break;
-                case 3:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
-                    break;
-                default:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
-                    break;
-            }
-
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
-        {
-            var formatter = new ValueStringBuilder(destination);
-            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
-            
-            if (formatter.Length > destination.Length)
-            {
-                // there was a reallocation, so the output didn't fit...
-                charsWritten = 0;
-                return false;
-            }
-
-            charsWritten = formatter.Length;
-            return true;
+            return estimatedSize;
         }
 
         /// <summary>
         /// Gets the number of arguments required in order to produce a string with this instance.
         /// </summary>
-        public int NumArgumentsNeeded
-        {
-            get { return _numArgs; }
-        }
+        public int NumArgumentsNeeded => _numArgs;
     }
 }

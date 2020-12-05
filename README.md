@@ -13,7 +13,7 @@ to actually format arguments.
 In that case, the API does only a single allocation for the final string and typically
 has no other intermediate allocations.
 
-* The StringFormatter.TryFormat formats into a preallocated Span<char>, enabling completely
+* The StringFormatter.TryFormat API formats into a preallocated Span<char>, enabling completely
 0 allocation and 0 copy string formatting. It took 20 years, but formatting in C# is now as fast
 as C's sprintf function!'
 
@@ -43,4 +43,3 @@ Here's output from the benchmark:
 # Implementation Todos
 
 * Add more unit tests
-* Add docs for the TryFormat family of functions.
