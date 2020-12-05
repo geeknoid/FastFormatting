@@ -19,6 +19,8 @@ namespace System.Text
         readonly string _literalString;
         readonly int _numArgs;
 
+        private const int MaxStackAlloc = 128;  // = 256 bytes
+
         /// <summary>
         /// Parses a composite format string into an efficient form for later use.
         /// </summary>
@@ -32,7 +34,6 @@ namespace System.Text
             int pos = 0;
             int len = format.Length;
             char ch = '\0';
-            StringBuilder? tmp = null;
             var segments = new List<FormatterSegment>();
             int numArgs = 0;
             var literal = new ValueStringBuilder(format.Length);
@@ -55,7 +56,7 @@ namespace System.Text
                         else
                         {
                             // dangling }
-                            // Release.Fail("Dangling } in format string.");
+                            throw new FormatException("Dangling } in format string.");
                         }
                     }
                     else if (ch == '{')
@@ -106,7 +107,7 @@ namespace System.Text
                 if (pos == len || (ch = format[pos]) < '0' || ch > '9')
                 {
                     // we need an argument index
-                    //                    Release.Fail("Missing argument index in format string.");
+                    throw new FormatException("Missing argument index in format string.");
                 }
 
                 // extract the argument index
@@ -117,7 +118,10 @@ namespace System.Text
                     pos++;
 
                     // make sure we get a suitable end to the argument index
-                    //                  Release.Assert(pos != len, "Invalid argument index.");
+                    if (pos == len)
+                    {
+                        throw new FormatException("Invalid argument index.");
+                    }
 
                     ch = format[pos];
                 } while (ch >= '0' && ch <= '9');
@@ -148,7 +152,10 @@ namespace System.Text
                     }
 
                     // did we run out of steam
-                    //                Release.Assert(pos != len, "Invalid format specification.");
+                    if (pos == len)
+                    {
+                        throw new FormatException(SR.Format_InvalidString);
+                    }
 
                     ch = format[pos];
                     if (ch == '-')
@@ -157,12 +164,18 @@ namespace System.Text
                         pos++;
 
                         // did we run out of steam?
-                        //                  Release.Assert(pos != len, "Invalid format specification.");
+                        if (pos == len)
+                        {
+                            throw new FormatException(SR.Format_InvalidString);
+                        }
 
                         ch = format[pos];
                     }
 
-                    //          Release.Assert(ch >= '0' && ch <= '9', "Invalid character in field width specification.");
+                    if (ch < '0' || ch > '9')
+                    {
+                        throw new FormatException("Invalid character in field width specification.");
+                    }
 
                     int val = 0;
                     do
@@ -171,10 +184,16 @@ namespace System.Text
                         pos++;
 
                         // did we run out of steam?
-                        //            Release.Assert(pos != len, "Invalid format specification.");
+                        if (pos == len)
+                        {
+                            throw new FormatException(SR.Format_InvalidString);
+                        }
 
                         // did we get a number that's too big?
-                        //Release.Assert(val < MaxWidth, "Field width value exceeds limit.");
+                        if (val > short.MaxValue)
+                        {
+                            throw new FormatException("Field width value exceeds limit.");
+                        }
 
                         ch = format[pos];
                     } while (ch >= '0' && ch <= '9');
@@ -190,23 +209,18 @@ namespace System.Text
 
                 // parse the optional custom format string
 
+                string fmtStr = string.Empty;
                 if (ch == ':')
                 {
                     pos++;
-
-                    if (tmp == null)
-                    {
-                        tmp = new StringBuilder();
-                    }
-                    else
-                    {
-                        tmp.Clear();
-                    }
+                    int argFormatStart = pos;
 
                     for (; ; )
                     {
-
-                        //          Release.Assert(pos != len, "Invalid format specification.");
+                        if (pos == len)
+                        {
+                            throw new FormatException("Invalid format specification.");
+                        }
 
                         ch = format[pos];
                         pos++;
@@ -219,7 +233,7 @@ namespace System.Text
                             }
                             else
                             {
-                                //                Release.Fail("Nested { in format specification.");
+                                throw new FormatException("Nested { in format specification.");
                             }
                         }
                         else if (ch == '}')
@@ -236,25 +250,26 @@ namespace System.Text
                                 break;
                             }
                         }
+                    }
 
-                        tmp.Append(ch);
+                    if (pos != argFormatStart)
+                    {
+                        fmtStr = format.Substring(argFormatStart, pos - argFormatStart);
                     }
                 }
 
-                //Release.Assert(ch == '}', "Unterminated format specification.");
+                if (ch != '}')
+                {
+                    throw new FormatException("Unterminated format specification.");
+                }
 
                 // skip over the closing }
                 pos++;
 
-                // process the optional format string
-                string fmtStr = string.Empty;
-                if ((tmp != null) && (tmp.Length > 0))
+                if (numArgs >= short.MaxValue)
                 {
-                    fmtStr = tmp.ToString();
-                    tmp.Clear();
+                    throw new FormatException("Must have less than 32768 arguments");
                 }
-
-                //                Release.Assert(argCount <= byte.MaxValue, "Must have less than 256 arguments");
 
                 if (!leftJustify)
                 {
@@ -265,11 +280,9 @@ namespace System.Text
             }
         }
 
-        // TODO: format to a span?
-        // TODO: make it so a Segment includes a literal preamble and then a format sequence
-        // TODO: API docs
-
-        private const int MaxStackAlloc = 128;  // = 256 bytes
+        struct Nothing
+        {
+        }
 
         public string Format<T>(IFormatProvider? provider, T arg)
         {
@@ -278,7 +291,7 @@ namespace System.Text
                 throw new ArgumentException($"Expected {_numArgs} arguments, but got 1");
             }
 
-            var pa = new ParamsArray<T, bool, bool>(arg, false, false);
+            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
             return Format(provider, in pa);
         }
 
@@ -289,37 +302,32 @@ namespace System.Text
                 throw new ArgumentException($"Expected {_numArgs} arguments, but got 2");
             }
 
-            var pa = new ParamsArray<T0, T1, bool>(arg0, arg1, false);
+            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
             return Format(provider, in pa);
         }
 
-        public string Format<T0, T1, T2>(IFormatProvider? provider, T0? arg0, T1? arg1, T2? arg2)
+        public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             if (_numArgs != 3)
             {
                 throw new ArgumentException($"Expected {_numArgs} arguments, but got 3");
             }
 
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2);
+            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
             return Format(provider, in pa);
         }
 
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
-#pragma warning disable CA1508 // Avoid dead conditional code
-            if (args == null || args.Length == 0)
-#pragma warning restore CA1508 // Avoid dead conditional code
+            if (args == null)
             {
-                if (_numArgs != 0)
-                {
-                    throw new ArgumentException($"Expected {_numArgs} arguments, but got none", nameof(args));
-                }
-                return _literalString;
+                args = Array.Empty<object>();
             }
 
-            if (args.Length + 3 != _numArgs)
+            var suppliedArgs = 3 + args.Length;
+            if (_numArgs != suppliedArgs)
             {
-                throw new ArgumentException($"Expected {_numArgs} arguments, but got {args.Length + 3}", nameof(args));
+                throw new ArgumentException($"Expected {_numArgs} arguments, but got {suppliedArgs}", nameof(args));
             }
 
             var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
@@ -328,46 +336,37 @@ namespace System.Text
 
         public string Format(IFormatProvider? provider, params object?[]? args)
         {
-#pragma warning disable CA1508 // Avoid dead conditional code
             if (args == null || args.Length == 0)
-#pragma warning restore CA1508 // Avoid dead conditional code
             {
                 if (_numArgs != 0)
                 {
-                    throw new ArgumentException($"Expected {_numArgs} arguments, but got none", nameof(args));
+                    throw new ArgumentException($"Expected {_numArgs} arguments, but got 0", nameof(args));
                 }
                 return _literalString;
             }
 
-            if (args.Length != _numArgs)
+            if (_numArgs != args.Length)
             {
                 throw new ArgumentException($"Expected {_numArgs} arguments, but got {args.Length}", nameof(args));
             }
 
-            object? arg0 = null;
-            object? arg1 = null;
-            object? arg2 = null;
-
-            if (args.Length >= 3)
+            ParamsArray<object?, object?, object?> pa;
+            switch (args.Length)
             {
-                arg0 = args[0];
-                arg1 = args[1];
-                arg2 = args[2];
-            }
-            else if (args.Length == 2)
-            {
-                arg0 = args[0];
-                arg1 = args[1];
-            }
-            else if (args.Length == 1)
-            {
-                arg0 = args[0];
+                case 1:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
+                    break;
+                case 2:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
+                    break;
+                case 3:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
+                    break;
+                default:
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
+                    break;
             }
 
-            // TODO: Reallocate and copy array
-            args = Array.Empty<object>();
-
-            var pa = new ParamsArray<object, object, object>(arg0, arg1, arg2, args);
             return Format(provider, in pa);
         }
 
@@ -375,9 +374,28 @@ namespace System.Text
         {
             // make a guesstimate at the size of the buffer we need for output
             int estimatedSize = _literalString.Length + _numArgs * 16;
-            if (_numArgs >= 1)
+
+            if (typeof(T0) == typeof(string))
             {
                 var str = pa.Arg0 as string;
+                if (str != null)
+                {
+                    estimatedSize += str.Length;
+                }
+            }
+
+            if (typeof(T1) == typeof(string))
+            {
+                var str = pa.Arg1 as string;
+                if (str != null)
+                {
+                    estimatedSize += str.Length;
+                }
+            }
+
+            if (typeof(T2) == typeof(string))
+            {
+                var str = pa.Arg2 as string;
                 if (str != null)
                 {
                     estimatedSize += str.Length;

@@ -35,8 +35,8 @@ Here's output from the benchmark:
 
     Console.WriteLine(str);     // prints Hello World
 ```
+# Implementation Todos
 
-# Note
-
-It's likely that the trick used to avoid boxing of arguments can be used for the
-regular String.Format method as well.
+* Support formatting to a span, for completely no-alloc usage
+* Make it so a FormatterSegment carries both a literal preamble and an argument format, to reduce the # of segments we keep
+* Add API docs
