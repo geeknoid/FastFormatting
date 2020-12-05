@@ -1,7 +1,7 @@
 # Fast Formatting
 
 This project is a proof-of-concept showing how to substantially improve string formatting performance in .NET.
-There are two innovations in this code relative to the classic String.Format method:
+There are three innovations in this code relative to the classic String.Format method:
 
 * The API is divided into parts. One part parses the composite format string, while
 the other part is responsible for the actual formatting work. You typically parse
@@ -13,6 +13,10 @@ to actually format arguments.
 In that case, the API does only a single allocation for the final string and typically
 has no other intermediate allocations.
 
+* The StringFormatter.TryFormat formats into a preallocated Span<char>, enabling completely
+0 allocation and 0 copy string formatting. It took 20 years, but formatting in C# is now as fast
+as C's sprintf function!'
+
 This code is designed to eventually be put into the .NET libraries. As such,
 I liberally borrowed private code from the .NET libraries, you'll find those 
 files in the FastFormatting/Borrowed folder.
@@ -20,11 +24,12 @@ files in the FastFormatting/Borrowed folder.
 Here's output from the benchmark:
 
 ```
-|              Method |     Mean |    Error |   StdDev |     Gen 0 |     Gen 1 |    Gen 2 | Allocated |
-|-------------------- |---------:|---------:|---------:|----------:|----------:|---------:|----------:|
-|    TestStringFormat | 52.13 ms | 1.016 ms | 1.611 ms | 3100.0000 | 1300.0000 | 400.0000 |  16.02 MB |
-| TestStringFormatter | 25.95 ms | 0.470 ms | 0.894 ms | 2187.5000 |  906.2500 | 281.2500 |  11.44 MB |
-|   TestInterpolation | 51.68 ms | 0.921 ms | 1.350 ms | 3100.0000 | 1300.0000 | 400.0000 |  16.02 MB |
+|                      Method |     Mean |    Error |   StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
+|---------------------------- |---------:|---------:|---------:|----------:|----------:|---------:|-----------:|
+|     TestClassicStringFormat | 46.02 ms | 0.865 ms | 1.515 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800057 B |
+|           TestInterpolation | 47.91 ms | 0.943 ms | 1.523 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800523 B |
+|         TestStringFormatter | 25.59 ms | 0.508 ms | 0.903 ms | 2187.5000 |  906.2500 | 281.2500 | 12000025 B |
+| TestStringFormatterWithSpan | 10.86 ms | 0.182 ms | 0.224 ms |         - |         - |        - |        4 B |
 ```
 
 # Example
@@ -37,5 +42,7 @@ Here's output from the benchmark:
 ```
 # Implementation Todos
 
-* Support formatting to a span, for completely no-alloc usage
 * Add more unit tests
+* Add support for more primitive types to avoid boxing them
+* Handle the BUGBUG span overflow cases in the TryFormat implementation.
+* Add docs for the TryFormat family of functions.

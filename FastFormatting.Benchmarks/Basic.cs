@@ -13,18 +13,28 @@ namespace FastFormatting.Benchmarks
         static readonly StringFormatter _sf = new("{0} Some literal portion in the middle {1} {2}");
         const int Iterations = 100000;
 
-        public static readonly string[] StringFormatResults = new string[Iterations];
-        public static readonly string[] StringFormatterResults = new string[Iterations];
+        public static readonly string[] ClassicStringFormatResults = new string[Iterations];
         public static readonly string[] InterpolationResults = new string[Iterations];
+        public static readonly string[] StringFormatterResults = new string[Iterations];
+        public static readonly char[] StringFormatterWithSpanResults = new char[1024];
         public static string Hello = "Hello";
         public static int FourtyTwo = 42;
 
         [Benchmark]
-        public void TestStringFormat()
+        public void TestClassicStringFormat()
         {
             for (int i = 0; i < Iterations; i++)
             {
-                StringFormatResults[i] = string.Format(null, "{0} Some literal portion in the middle {1} {2}", Hello, FourtyTwo, i);
+                ClassicStringFormatResults[i] = string.Format(null, "{0} Some literal portion in the middle {1} {2}", Hello, FourtyTwo, i);
+            }
+        }
+
+        [Benchmark]
+        public void TestInterpolation()
+        {
+            for (int i = 0; i < Iterations; i++)
+            {
+                InterpolationResults[i] = $"{Hello} Some literal portion in the middle {FourtyTwo} {i}";
             }
         }
 
@@ -38,11 +48,11 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestInterpolation()
+        public void TestStringFormatterWithSpan()
         {
             for (int i = 0; i < Iterations; i++)
             {
-                InterpolationResults[i] = $"{Hello} Some literal portion in the middle {FourtyTwo} {i}";
+                _ = _sf.TryFormat(StringFormatterWithSpanResults.AsSpan(), out int charsWritten, null, Hello, FourtyTwo, i);
             }
         }
     }
