@@ -10,116 +10,146 @@ namespace System.Text
         public void Format<T0, T1, T2>(IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa, FormatterSegment[] segments, string literalString)
         {
             int literalIndex = 0;
-            for (int i = 0; i < segments.Length; i++)
+            foreach (var segment in segments)
             {
-                int literalCount = segments[i].LiteralCount;
+                int literalCount = segment.LiteralCount;
                 if (literalCount > 0)
                 {
-                    // the segment is a literal
+                    // the segment has some literal text
                     var substring = literalString.AsSpan(literalIndex, literalCount);
                     Append(substring);
                     literalIndex += literalCount;
                 }
 
-                var argIndex = segments[i].ArgIndex;
+                var argIndex = segment.ArgIndex;
                 if (argIndex >= 0)
                 {
-                    string argFormat = segments[i].Format;
-                    ReadOnlySpan<char> result = default;
-                    bool freshSpan = false;
-
+                    // the segment has an arg to format
                     switch (argIndex)
                     {
                         case 0:
-                            result = HandleArg(pa.Arg0, argFormat, provider, out freshSpan);
+                            HandleArg(pa.Arg0, segment.Format, segment.Width, provider);
                             break;
 
                         case 1:
-                            result = HandleArg(pa.Arg1, argFormat, provider, out freshSpan);
+                            HandleArg(pa.Arg1, segment.Format, segment.Width, provider);
                             break;
 
                         case 2:
-                            result = HandleArg(pa.Arg2, argFormat, provider, out freshSpan);
+                            HandleArg(pa.Arg2, segment.Format, segment.Width, provider);
                             break;
 
                         default:
-                            result = HandleArg(pa.Args[argIndex - 3], argFormat, provider, out freshSpan);
+                            HandleReferenceArg(pa.Args[argIndex - 3], segment.Format, segment.Width, provider);
                             break;
                     }
-
-                    ApplyPadding(segments[i].Width, result, freshSpan);
                 }
             }
         }
 
-        private ReadOnlySpan<char> HandleArg<T>(T arg, string argFormat, IFormatProvider? provider, out bool freshSpan)
+        private void HandleArg<T>(T arg, string argFormat, int argWidth, IFormatProvider? provider)
         {
-            freshSpan = false;
             switch (arg)
             {
                 case int a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case long a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case double a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case float a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case uint a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case ulong a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case short a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case ushort a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case byte a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case sbyte a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case bool a:
-                    return Append(a);
+                    FinishArg(Append(a), argWidth, false);
+                    break;
 
                 case DateTime a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case TimeSpan a:
-                    return Append(a, argFormat, provider);
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 case Guid a:
-                    return Append(a, argFormat);
+                    FinishArg(Append(a, argFormat), argWidth, false);
+                    break;
 
                 case decimal a:
-                    return Append(a, argFormat, provider);
-
-                case ISpanFormattable a:
-                    return Append(a, argFormat, provider);
-
-                case IFormattable a:
-                    freshSpan = true;
-                    return a.ToString(argFormat, provider);
-
-                case object a:
-                    freshSpan = true;
-                    return a.ToString();
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
 
                 default:
-                    return Array.Empty<char>();
+                    HandleReferenceArg(arg, argFormat, argWidth, provider);
+                    break;
             }
         }
 
+        private void HandleReferenceArg(object? arg, string argFormat, int argWidth, IFormatProvider? provider)
+        {
+            switch (arg)
+            {
+                case ISpanFormattable a:
+                    FinishArg(Append(a, argFormat, provider), argWidth, false);
+                    break;
+
+                case IFormattable a:
+                    FinishArg(a.ToString(argFormat, provider), argWidth, true);
+                    break;
+
+                case object a:
+                    FinishArg(a.ToString(), argWidth, true);
+                    break;
+
+                default:
+                    // when arg == null
+                    FinishArg(Array.Empty<char>(), argWidth, false);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Perform the final padding and insertion if needed.
+        /// </summary>
+        /// <remarks>
+        /// If appendResult is false, it means the result is already present in the
+        /// main output buffer. Otherwise, the result is in a distinct span and needs
+        /// to be copied into the output buffer.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ApplyPadding(int width, ReadOnlySpan<char> result, bool freshSpan)
+        private void FinishArg(ReadOnlySpan<char> result, int width, bool appendResult)
         {
             var leftJustify = true;
 
@@ -135,23 +165,26 @@ namespace System.Text
             {
                 if (leftJustify)
                 {
-                    if (freshSpan)
+                    if (appendResult)
                     {
                         Append(result);
                     }
                     Append(' ', padding);
                 }
-                else if (freshSpan)
-                {
-                    Append(' ', padding);
-                    Append(result);
-                }
                 else
                 {
-                    Insert(Length - result.Length, ' ', padding);
+                    if (appendResult)
+                    {
+                        Append(' ', padding);
+                        Append(result);
+                    }
+                    else
+                    {
+                        Insert(Length - result.Length, ' ', padding);
+                    }
                 }
             }
-            else if (freshSpan)
+            else if (appendResult)
             {
                 Append(result);
             }
