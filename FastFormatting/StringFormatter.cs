@@ -25,7 +25,7 @@ namespace FastFormatting
     /// </remarks>
     public partial class StringFormatter
     {
-        readonly FormatterSegment[] _segments;  // info on the different chunks to process
+        readonly Segment[] _segments;  // info on the different chunks to process
         readonly string _literalString;         // all literal text to be inserted into the output
         readonly int _numArgs;                  // # args needed during format
 
@@ -44,7 +44,7 @@ namespace FastFormatting
             int pos = 0;
             int len = format.Length;
             char ch = '\0';
-            var segments = new List<FormatterSegment>();
+            var segments = new List<Segment>();
             int numArgs = 0;
             var literal = new StringMaker(format.Length);
 
@@ -98,7 +98,7 @@ namespace FastFormatting
                             num = short.MaxValue;
                         }
 
-                        segments.Add(new FormatterSegment((short)num, -1, 0, string.Empty));
+                        segments.Add(new Segment((short)num, -1, 0, string.Empty));
                         totalLit -= num;
                     }
 
@@ -269,11 +269,11 @@ namespace FastFormatting
                 int total = literal.Length - segStart;
                 while (total > short.MaxValue)
                 {
-                    segments.Add(new FormatterSegment(short.MaxValue, -1, 0, string.Empty));
+                    segments.Add(new Segment(short.MaxValue, -1, 0, string.Empty));
                     total -= short.MaxValue;
                 }
 
-                segments.Add(new FormatterSegment((short)total, (short)argIndex, (short)argWidth, argFormat));
+                segments.Add(new Segment((short)total, (short)argIndex, (short)argWidth, argFormat));
             }
         }
 
@@ -304,7 +304,7 @@ namespace FastFormatting
         public string Format<T>(IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
+            var pa = new Params<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
             return Format(provider, in pa);
         }
 
@@ -318,7 +318,7 @@ namespace FastFormatting
         public string Format<T0, T1>(IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing));
+            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default(Nothing));
             return Format(provider, in pa);
         }
 
@@ -333,7 +333,7 @@ namespace FastFormatting
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
             return Format(provider, in pa);
         }
 
@@ -349,7 +349,7 @@ namespace FastFormatting
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             CheckNumArgs(3, args);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
             return Format(provider, in pa);
         }
 
@@ -368,23 +368,23 @@ namespace FastFormatting
                 return _literalString;
             }
 
-            ParamsArray<object?, object?, object?> pa;
+            Params<object?, object?, object?> pa;
             switch (args!.Length)
             {
                 case 1:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null);
+                    pa = new Params<object?, object?, object?>(args[0], null, null);
                     break;
 
                 case 2:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null);
+                    pa = new Params<object?, object?, object?>(args[0], args[1], null);
                     break;
                 
                 case 3:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2]);
+                    pa = new Params<object?, object?, object?>(args[0], args[1], args[2]);
                     break;
                 
                 default:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
+                    pa = new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
                     break;
             }
 
@@ -402,7 +402,7 @@ namespace FastFormatting
         public bool TryFormat<T>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
+            var pa = new Params<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -418,7 +418,7 @@ namespace FastFormatting
         public bool TryFormat<T0, T1>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing));
+            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default(Nothing));
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -435,7 +435,7 @@ namespace FastFormatting
         public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -453,7 +453,7 @@ namespace FastFormatting
         public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             CheckNumArgs(3, args);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, args);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -481,30 +481,30 @@ namespace FastFormatting
                 return true;
             }
 
-            ParamsArray<object?, object?, object?> pa;
+            Params<object?, object?, object?> pa;
             switch (args!.Length)
             {
                 case 1:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null);
+                    pa = new Params<object?, object?, object?>(args[0], null, null);
                     break;
 
                 case 2:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null);
+                    pa = new Params<object?, object?, object?>(args[0], args[1], null);
                     break;
                 
                 case 3:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2]);
+                    pa = new Params<object?, object?, object?>(args[0], args[1], args[2]);
                     break;
                 
                 default:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
+                    pa = new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3));
                     break;
             }
 
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
-        private string Format<T0, T1, T2>(IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        private string Format<T0, T1, T2>(IFormatProvider? provider, in Params<T0, T1, T2> pa)
         {
             int estimatedSize = EstimateResultSize(in pa);
             var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
@@ -512,7 +512,7 @@ namespace FastFormatting
             return sm.ExtractString();
         }
 
-        private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in Params<T0, T1, T2> pa)
         {
             var sm = new StringMaker(destination, false);
             Format<T0, T1, T2>(ref sm, provider, in pa);
@@ -528,7 +528,7 @@ namespace FastFormatting
         //
         // This code assumes there are sufficient arguments in the ParamsArray to satisfy the needs
         // of the format operation, so the upstream callers should validate this a priori.
-        private void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        private void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, in Params<T0, T1, T2> pa)
         {
             int literalIndex = 0;
             foreach (var segment in _segments)
@@ -660,7 +660,7 @@ namespace FastFormatting
             }
         }
 
-        private int EstimateResultSize<T0, T1, T2>(in ParamsArray<T0, T1, T2> pa)
+        private int EstimateResultSize<T0, T1, T2>(in Params<T0, T1, T2> pa)
         {
             // make a guesstimate at the size of the buffer we need for output
             int estimatedSize = _literalString.Length + _numArgs * 16;
