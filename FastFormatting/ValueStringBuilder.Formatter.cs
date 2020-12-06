@@ -33,26 +33,26 @@ namespace System.Text
                     switch (argIndex)
                     {
                         case 0:
-                            HandleArg(pa.Arg0, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(pa.Arg0, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         case 1:
-                            HandleArg(pa.Arg1, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(pa.Arg1, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         case 2:
-                            HandleArg(pa.Arg2, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(pa.Arg2, segment.ArgFormat, segment.ArgWidth, provider);
                             break;
 
                         default:
-                            HandleReferenceArg(pa.Args[argIndex - 3], segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendReferenceArg(pa.Args[argIndex - 3], segment.ArgFormat, segment.ArgWidth, provider);
                             break;
                     }
                 }
             }
         }
 
-        private void HandleArg<T>(T arg, string argFormat, int argWidth, IFormatProvider? provider)
+        private void AppendArg<T>(T arg, string argFormat, int argWidth, IFormatProvider? provider)
         {
             switch (arg)
             {
@@ -117,12 +117,12 @@ namespace System.Text
                     break;
 
                 default:
-                    HandleReferenceArg(arg, argFormat, argWidth, provider);
+                    AppendReferenceArg(arg, argFormat, argWidth, provider);
                     break;
             }
         }
 
-        private void HandleReferenceArg(object? arg, string argFormat, int argWidth, IFormatProvider? provider)
+        private void AppendReferenceArg(object? arg, string argFormat, int argWidth, IFormatProvider? provider)
         {
             switch (arg)
             {
@@ -200,7 +200,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(long value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(long value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -217,7 +217,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(ulong value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(ulong value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -234,7 +234,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(bool value)
+        public ReadOnlySpan<char> Append(bool value)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -251,7 +251,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(DateTime value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(DateTime value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -268,7 +268,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(TimeSpan value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(TimeSpan value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -285,7 +285,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(decimal value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(decimal value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -302,7 +302,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(Guid value, ReadOnlySpan<char> format)
+        public ReadOnlySpan<char> Append(Guid value, ReadOnlySpan<char> format)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -319,7 +319,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(double value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(double value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
@@ -336,7 +336,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private ReadOnlySpan<char> Append(ISpanFormattable value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append(ISpanFormattable value, ReadOnlySpan<char> format, IFormatProvider? provider)
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
