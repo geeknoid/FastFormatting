@@ -8,44 +8,398 @@ namespace FastFormatting.Tests
 
     public class FormatTests
     {
-        [Fact]
-        public void Basic()
-        {
-            var sf = new StringFormatter("Hello {0}");
-            var str = sf.Format(null, "Bob");
-            Assert.Equal("Hello Bob", str);
-        }
-
-
-        private void CheckFormat(string format, params object[] args)
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckExpansion<T>(T arg)
         {
             string? expectedResult = null;
-            Exception? expectedException = null;
+            string? actualResult1 = null;
 
-            string? actualResult = null;
-            Exception? actualException = null;
+            var format = "{0,256}{1}";
 
-            try
+            expectedResult = String.Format(format, 42, arg);
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, 42, arg);
+            Assert.Equal(expectedResult, actualResult1);
+        }
+
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckFormat<T>(string format, T arg)
+        {
+            string? expectedResult = null;
+            string? actualResult1 = null;
+            string? actualResult2 = null;
+
+            expectedResult = String.Format(format, arg);
+
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, arg);
+
+            var s = new Span<char>(new char[format.Length * 2 + 128]);
+            if (sf.TryFormat(s, out int charsWritten, null, arg))
             {
-                expectedResult = String.Format(format, args);
-            }
-            catch (FormatException ex)
-            {
-                expectedException = ex;
+                actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
-            try
+            Assert.Equal(expectedResult, actualResult1);
+            Assert.Equal(expectedResult, actualResult2);
+        }
+
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckFormat<T0, T1>(string format, T0 arg0, T1 arg1)
+        {
+            string? expectedResult = null;
+            string? actualResult1 = null;
+            string? actualResult2 = null;
+
+            expectedResult = String.Format(format, arg0, arg1);
+
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, arg0, arg1);
+
+            sf = new StringFormatter(format);
+            var s = new Span<char>(new char[format.Length * 2 + 128]);
+            if (sf.TryFormat(s, out int charsWritten, null, arg0, arg1))
             {
-                var sf = new StringFormatter(format);
-                actualResult = sf.Format(null, args);
-            }
-            catch (FormatException ex)
-            {
-                actualException = ex;
+                actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
-            Assert.Equal(expectedResult, actualResult);
-            Assert.Equal(expectedException, actualException);
+            Assert.Equal(expectedResult, actualResult1);
+            Assert.Equal(expectedResult, actualResult2);
+        }
+
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckFormat<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2)
+        {
+            string? expectedResult = null;
+            string? actualResult1 = null;
+            string? actualResult2 = null;
+
+            expectedResult = String.Format(format, arg0, arg1, arg2);
+
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, arg0, arg1, arg2);
+
+            sf = new StringFormatter(format);
+            var s = new Span<char>(new char[format.Length * 2 + 128]);
+            if (sf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2))
+            {
+                actualResult2 = s.Slice(0, charsWritten).ToString();
+            }
+
+            Assert.Equal(expectedResult, actualResult1);
+            Assert.Equal(expectedResult, actualResult2);
+        }
+
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckFormat<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
+        {
+            string? expectedResult = null;
+            string? actualResult1 = null;
+            string? actualResult2 = null;
+
+            int argLen = 3;
+            if (args != null)
+            {
+                argLen += args.Length;
+            }
+
+            var a = new object?[argLen];
+            a[0] = arg0;
+            a[1] = arg1;
+            a[2] = arg2;
+            for (int i = 3; i < a.Length; i++)
+            {
+                a[i] = args![i - 3];
+            }
+
+            expectedResult = String.Format(format, a);
+
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, arg0, arg1, arg2, args);
+
+            sf = new StringFormatter(format);
+            var s = new Span<char>(new char[format.Length * 2 + 128]);
+            if (sf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2, args))
+            {
+                actualResult2 = s.Slice(0, charsWritten).ToString();
+            }
+
+            Assert.Equal(expectedResult, actualResult1);
+            Assert.Equal(expectedResult, actualResult2);
+        }
+
+        // do a formatting operation, comparing the results against classic String.Format
+        private void CheckFormat(string format, params object?[] args)
+        {
+            string? expectedResult = null;
+            string? actualResult1 = null;
+            string? actualResult2 = null;
+
+            expectedResult = String.Format(format, args);
+
+            var sf = new StringFormatter(format);
+            actualResult1 = sf.Format(null, args);
+
+            sf = new StringFormatter(format);
+            var s = new Span<char>(new char[format.Length * 2]);
+            if (sf.TryFormat(s, out int charsWritten, null, args))
+            {
+                actualResult2 = s.Slice(0, charsWritten).ToString();
+            }
+
+            Assert.Equal(expectedResult, actualResult1);
+            Assert.Equal(expectedResult, actualResult2);
+        }
+
+        private void CheckBadFormatString(string format)
+        {
+            Assert.Throws<FormatException>(() => _ = String.Format(format, 1, 2, 3, 4, 5, 6, 7));
+            Assert.Throws<FormatException>(() => _ = new StringFormatter(format));
+        }
+
+        [Fact]
+        public void NoArgs()
+        {
+            CheckFormat("");
+            CheckFormat("X");
+            CheckFormat("XX");
+            CheckFormat(new StringBuilder().Append('X', 32767).ToString());
+            CheckFormat(new StringBuilder().Append('X', 32768).ToString());
+            CheckFormat(new StringBuilder().Append('X', 65535).ToString());
+            CheckFormat(new StringBuilder().Append('X', 65536).ToString());
+        }
+
+        [Fact]
+        public void OneArg()
+        {
+            CheckFormat("{0}", 42);
+            CheckFormat("X{0}", 42);
+            CheckFormat("{0}Y", 42);
+            CheckFormat("X{0}Y", 42);
+            CheckFormat("XZ{0}ZY", 42);
+            CheckFormat(new StringBuilder().Append('X', 65535).ToString() + "{0}", 42);
+            CheckFormat("{0}" + new StringBuilder().Append('X', 65535).ToString(), 42);
+            CheckFormat(new StringBuilder().Append('X', 65535).ToString() + "{0}" + new StringBuilder().Append('X', 65535).ToString(), 42);
+        }
+
+        [Fact]
+        public void TwoArgs()
+        {
+            CheckFormat("{0} {1}", 42, 3.14);
+            CheckFormat("X{0}{1}", 42, 3.14);
+            CheckFormat("{0} {1}Y", 42, 3.14);
+            CheckFormat("X{0}{1}Y", 42, 3.14);
+            CheckFormat("XZ{0} {1}ZY", 42, 3.14);
+
+            CheckFormat("{0} {1} {0}", 42, 3.14);
+            CheckFormat("X{0}{1} {0}", 42, 3.14);
+            CheckFormat("{0} {1}Y {0}", 42, 3.14);
+            CheckFormat("X{0}{1}Y {0}", 42, 3.14);
+            CheckFormat("XZ{0} {1}ZY {0}", 42, 3.14);
+        }
+
+        [Fact]
+        public void ThreeArgs()
+        {
+            CheckFormat("{0} {1} {2}", 42, 3.14, "XX");
+            CheckFormat("X{0}{1}{2}", 42, 3.14, "XX");
+            CheckFormat("{0} {1} {2}Y", 42, 3.14, "XX");
+            CheckFormat("X{0}{1}{2}Y", 42, 3.14, "XX");
+            CheckFormat("XZ{0} {1} {2}ZY", 42, 3.14, "XX");
+        }
+
+        [Fact]
+        public void FourArgs()
+        {
+            CheckFormat("{0} {1} {2} {3}", 42, 3.14, "XX", true);
+            CheckFormat("X{0}{1}{2}{3}", 42, 3.14, "XX", true);
+            CheckFormat("{0} {1} {2} {3}Y", 42, 3.14, "XX", false);
+            CheckFormat("X{0}{1}{2}{3}Y", 42, 3.14, "XX", true);
+            CheckFormat("XZ{0} {1} {2} {3}ZY", 42, 3.14, "XX", false);
+        }
+
+        [Fact]
+        public void ArgArray()
+        {
+            CheckFormat("", new object[] { });
+            CheckFormat("X", new object[] { });
+            CheckFormat("XY", new object[] { });
+
+            CheckFormat("{0}", new object[] { 42 });
+            CheckFormat("X{0}", new object[] { 42 });
+            CheckFormat("{0}Y", new object[] { 42 });
+            CheckFormat("X{0}Y", new object[] { 42 });
+            CheckFormat("XZ{0}ZY", new object[] { 42 });
+
+            CheckFormat("{0} {1}", new object[] { 42, 3.14 });
+            CheckFormat("X{0}{1}", new object[] { 42, 3.14 });
+            CheckFormat("{0} {1}Y", new object[] { 42, 3.14 });
+            CheckFormat("X{0}{1}Y", new object[] { 42, 3.14 });
+            CheckFormat("XZ{0} {1}ZY", new object[] { 42, 3.14 });
+
+            CheckFormat("{0} {1} {2}", new object[] { 42, 3.14, "XX" });
+            CheckFormat("X{0}{1}{2}", new object[] { 42, 3.14, "XX" });
+            CheckFormat("{0} {1} {2}Y", new object[] { 42, 3.14, "XX" });
+            CheckFormat("X{0}{1}{2}Y", new object[] { 42, 3.14, "XX" });
+            CheckFormat("XZ{0} {1} {2}ZY", new object[] { 42, 3.14, "XX" });
+
+            CheckFormat("{0} {1} {2} {3}", new object[] {42, 3.14, "XX", true });
+            CheckFormat("X{0}{1}{2}{3}", new object[] { 42, 3.14, "XX", true });
+            CheckFormat("{0} {1} {2} {3}Y", new object[] { 42, 3.14, "XX", false });
+            CheckFormat("X{0}{1}{2}{3}Y", new object[] { 42, 3.14, "XX", true });
+            CheckFormat("XZ{0} {1} {2} {3}ZY", new object[] { 42, 3.14, "XX", false });
+
+            CheckFormat("XZ{0} {1} {2} {3}ZY", new object[] { "42", "3.14", "XX", "false" });
+        }
+
+        [Fact]
+        public void BadFormatString()
+        {
+            CheckBadFormatString("{");
+            CheckBadFormatString("X{");
+            CheckBadFormatString("{}");
+            CheckBadFormatString("}");
+            CheckBadFormatString("X}");
+            CheckBadFormatString("{X}");
+            CheckBadFormatString("{0,X}");
+            CheckBadFormatString("{100000000000000000000,2}");
+            CheckBadFormatString("{0");
+            CheckBadFormatString("{0,");
+            CheckBadFormatString("{0,}");
+            CheckBadFormatString("{0,-");
+            CheckBadFormatString("{0,-}");
+            CheckBadFormatString("{0,0");
+            CheckBadFormatString("{0,0X");
+            CheckBadFormatString("{0,1000000000000000000}");
+            CheckBadFormatString("{0,0:");
+            CheckBadFormatString("{0,0:{");
+            CheckBadFormatString("{ 0,0}");
+            CheckBadFormatString("{0,0:{{");
+            CheckBadFormatString("{0,0:}}");
+            CheckBadFormatString("{0,0:{{X}}");
+            CheckBadFormatString("{0,0:}}");
+
+            Assert.Throws<ArgumentNullException>(() => _ = new StringFormatter(null!));
+        }
+
+        [Fact]
+        public void CheckWhitespace()
+        {
+            CheckFormat("{0, 0}", 42);
+            CheckFormat("{0 ,0}", 42);
+            CheckFormat("{0 }", 42);
+            CheckFormat("{0, 0}", 42);
+            CheckFormat("{0,0 }", 42);
+            CheckFormat("{0,0 :x}", 42);
+            CheckFormat("{0,0: X}", 42);
+            CheckFormat("{0,0:X }", 42);
+        }
+
+        [Fact]
+        public void CheckWidth()
+        {
+            for (int width = -10; width < 10; width++)
+            {
+                CheckFormat($"{{0,{width}}}", "X");
+                CheckFormat($"{{0,{width}}}", "XY");
+                CheckFormat($"{{0,{width}}}", "XYZ");
+            }
+        }
+
+        [Fact]
+        public void CheckEscapes()
+        {
+            CheckFormat("{{{0}", 42);
+            CheckFormat("{{{0}}}", 42);
+        }
+
+        [Fact]
+        public void BadNumArgs()
+        {
+            var sf = new StringFormatter("{0} {2}");
+
+            Assert.Throws<ArgumentException>(() => sf.Format(null));
+            Assert.Throws<ArgumentException>(() => sf.Format(null, 1, 2, 3, 4));
+        }
+
+        struct Custom1 : IFormattable
+        {
+            public string ToString(string? format, IFormatProvider? formatProvider)
+            {
+                return "IFormattable Output";
+            }
+        }
+
+        struct Custom2 : ISpanFormattable, IFormattable
+        {
+            public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+            {
+                if (destination.Length < 16)
+                {
+                    charsWritten = 0;
+                    return false;
+                }
+
+                "TryFormat Output".AsSpan().CopyTo(destination);
+                charsWritten = 16;
+                return true;
+            }
+
+            // NOTE: If/when this test is build as part of the .NET release,
+            //       this should be removed. It's needed because String.Format
+            //       doesn't recognize my hacky ISpanFormattable.
+            public string ToString(string? format, IFormatProvider? formatProvider)
+            {
+                return "TryFormat Output";
+            }
+        }
+
+        [Fact]
+        public void ArgTypes()
+        {
+            CheckFormat("{0}", (sbyte)42);
+            CheckFormat("{0}", (short)42);
+            CheckFormat("{0}", (int)42);
+            CheckFormat("{0}", (long)42);
+            CheckFormat("{0}", (byte)42);
+            CheckFormat("{0}", (ushort)42);
+            CheckFormat("{0}", (uint)42);
+            CheckFormat("{0}", (ulong)42);
+            CheckFormat("{0}", (float)42.0);
+            CheckFormat("{0}", (double)42.0);
+            CheckFormat("{0}", DateTime.Now);
+            CheckFormat("{0}", new TimeSpan(42));
+            CheckFormat("{0}", true);
+            CheckFormat("{0}", new Decimal(42.0));
+            CheckFormat("{0}", new Guid(new byte[] { 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+            CheckFormat("{0}", "XYZ");
+            CheckFormat("{0}", new object?[] { null });
+            CheckFormat("{0}", new Custom1());
+            CheckFormat("{0}", new Custom2());
+        }
+
+        [Fact]
+        public void BufferExpansion()
+        {
+            CheckExpansion((sbyte)42);
+            CheckExpansion((short)42);
+            CheckExpansion((int)42);
+            CheckExpansion((long)42);
+            CheckExpansion((byte)42);
+            CheckExpansion((ushort)42);
+            CheckExpansion((uint)42);
+            CheckExpansion((ulong)42);
+            CheckExpansion((float)42.0);
+            CheckExpansion((double)42.0);
+            CheckExpansion(DateTime.Now);
+            CheckExpansion(new TimeSpan(42));
+            CheckExpansion(true);
+            CheckExpansion(new Decimal(42.0));
+            CheckExpansion(new Guid(new byte[] { 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+            CheckExpansion("XYZ");
+            CheckExpansion(new object?[] { null });
+            CheckExpansion(new Custom1());
+            CheckExpansion(new Custom2());
         }
 
         [Fact]
@@ -396,114 +750,6 @@ namespace FastFormatting.Tests
             CheckFormat("{0,4:d4}", -100); 
             CheckFormat("{0,4:d4}", -123); 
             CheckFormat("{0,4:d4}", -1024); 
-        }
-
-        sealed class TestFormat : IFormattable
-        {
-            readonly string m_expectedFormat;
-            readonly string m_result;
-
-            public TestFormat(string expectedFormat, string result)
-            {
-                m_expectedFormat = expectedFormat;
-                m_result = result;
-            }
-
-            public string ToString(string? format, IFormatProvider? provider)
-            {
-                return format == m_expectedFormat ? m_result : string.Empty;
-            }
-        }
-
-        [Fact]
-        public void StringFormatChecks()
-        {
-            CheckFormat("{0}", 1); 
-            CheckFormat("{0}{{}}{1}", 1, 2); 
-
-            var tf = new TestFormat("{1", "XXX");
-            CheckFormat("a{0:{{1}b", tf); 
-
-            tf = new TestFormat("z{1", "XXX");
-            CheckFormat("a{0:z{{1}b", tf); 
-
-            tf = new TestFormat("z{{1", "XXX");
-            CheckFormat("a{0:z{{{{1}b", tf); 
-
-            tf = new TestFormat("1}", "XXX");
-            CheckFormat("a{0:1}}}b", tf); 
-
-            tf = new TestFormat("1}z", "XXX");
-            CheckFormat("a{0:1}}z}b", tf); 
-
-            tf = new TestFormat("1}z}", "XXX");
-            CheckFormat("a{0:1}}z}}}b", tf); 
-
-            // tests for field width
-
-            CheckFormat("{0,0}", ""); 
-            CheckFormat("{0,1}", ""); 
-            CheckFormat("{0,-1}", ""); 
-            CheckFormat("{0,2}", ""); 
-            CheckFormat("{0,-2}", ""); 
-            CheckFormat("{0,3}", ""); 
-            CheckFormat("{0,-3}", ""); 
-
-            CheckFormat("{0,0}", "X"); 
-            CheckFormat("{0,1}", "X"); 
-            CheckFormat("{0,-1}", "X"); 
-            CheckFormat("{0,2}", "X"); 
-            CheckFormat("{0,-2}", "X"); 
-            CheckFormat("{0,3}", "X"); 
-            CheckFormat("{0,-3}", "X"); 
-
-            CheckFormat("{0,0}", "XY"); 
-            CheckFormat("{0,1}", "XY"); 
-            CheckFormat("{0,-1}", "XY"); 
-            CheckFormat("{0,2}", "XY"); 
-            CheckFormat("{0,-2}", "XY"); 
-            CheckFormat("{0,3}", "XY"); 
-            CheckFormat("{0,-3}", "XY"); 
-
-            CheckFormat("{0,0}", "XYZ"); 
-            CheckFormat("{0,1}", "XYZ"); 
-            CheckFormat("{0,-1}", "XYZ"); 
-            CheckFormat("{0,2}", "XYZ"); 
-            CheckFormat("{0,-2}", "XYZ"); 
-            CheckFormat("{0,3}", "XYZ"); 
-            CheckFormat("{0,-3}", "XYZ"); 
-
-            CheckFormat("{0,*1}", "", 0); 
-            CheckFormat("{0,*1}", "", 1); 
-            CheckFormat("{0,*1}", "", -1); 
-            CheckFormat("{0,*1}", "", 2); 
-            CheckFormat("{0,*1}", "", -2); 
-            CheckFormat("{0,*1}", "", 3); 
-            CheckFormat("{0,*1}", "", -3); 
-
-            CheckFormat("{0,*1}", "X", 0); 
-            CheckFormat("{0,*1}", "X", 1); 
-            CheckFormat("{0,*1}", "X", -1); 
-            CheckFormat("{0,*1}", "X", 2); 
-            CheckFormat("{0,*1}", "X", -2); 
-            CheckFormat("{0,*1}", "X", 3); 
-            CheckFormat("{0,*1}", "X", -3); 
-
-            CheckFormat("{0,*1}", "XY", 0); 
-            CheckFormat("{0,*1}", "XY", 1); 
-            CheckFormat("{0,*1}", "XY", -1); 
-            CheckFormat("{0,*1}", "XY", 2); 
-            CheckFormat("{0,*1}", "XY", -2); 
-            CheckFormat("{0,*1}", "XY", 3); 
-            CheckFormat("{0,*1}", "XY", -3); 
-
-            CheckFormat("{0,*1}", "XYZ", 0); 
-            CheckFormat("{0,*1}", "XYZ", 1); 
-            CheckFormat("{0,*1}", "XYZ", -1); 
-            CheckFormat("{0,*1}", "XYZ", 2); 
-            CheckFormat("{0,*1}", "XYZ", -2); 
-            CheckFormat("{0,*1}", "XYZ", 3); 
-            CheckFormat("{0,*1}", "XYZ", -3); 
         }
     }
 }

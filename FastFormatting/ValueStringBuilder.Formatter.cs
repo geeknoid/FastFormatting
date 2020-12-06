@@ -126,6 +126,10 @@ namespace System.Text
         {
             switch (arg)
             {
+                case string a:
+                    FinishArg(a, argWidth, true);
+                    break;
+
                 case ISpanFormattable a:
                     FinishArg(Append(a, argFormat, provider), argWidth, false);
                     break;
@@ -203,7 +207,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -220,7 +224,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -237,7 +241,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -254,7 +258,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -271,7 +275,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -288,7 +292,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -305,7 +309,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -322,7 +326,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 
@@ -339,7 +343,7 @@ namespace System.Text
 
             while (!value.TryFormat(s, out charsWritten, format, provider))
             {
-                EnsureCapacity(s.Length * 2);
+                Grow(s.Length * 2 + 2);
                 s = _chars.Slice(_pos);
             }
 

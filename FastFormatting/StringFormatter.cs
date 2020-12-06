@@ -213,7 +213,7 @@ namespace System.Text
                     pos++;
                 }
 
-                // parse the optional custom format string
+                // parse the optional argument format string
 
                 string argFormat = string.Empty;
                 if (ch == ':')
@@ -232,29 +232,13 @@ namespace System.Text
                         pos++;
                         if (ch == '{')
                         {
-                            if (pos < len && format[pos] == '{')
-                            {
-                                // double {, an escape sequence
-                                pos++;
-                            }
-                            else
-                            {
-                                throw new FormatException("Nested { in format specification.");
-                            }
+                            throw new FormatException("Nested { in format specification.");
                         }
                         else if (ch == '}')
                         {
-                            if (pos < len && format[pos] == '}')
-                            {
-                                // double }, an escape sequence
-                                pos++;
-                            }
-                            else
-                            {
-                                // end of format specification
-                                pos--;
-                                break;
-                            }
+                            // end of format specification
+                            pos--;
+                            break;
                         }
                     }
 
@@ -320,7 +304,7 @@ namespace System.Text
         public string Format<T>(IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
+            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
             return Format(provider, in pa);
         }
 
@@ -334,7 +318,7 @@ namespace System.Text
         public string Format<T0, T1>(IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
+            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing));
             return Format(provider, in pa);
         }
 
@@ -349,7 +333,7 @@ namespace System.Text
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
+            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2);
             return Format(provider, in pa);
         }
 
@@ -388,15 +372,15 @@ namespace System.Text
             switch (args!.Length)
             {
                 case 1:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null);
                     break;
 
                 case 2:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null);
                     break;
                 
                 case 3:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2]);
                     break;
                 
                 default:
@@ -418,7 +402,7 @@ namespace System.Text
         public bool TryFormat<T>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing), 1);
+            var pa = new ParamsArray<T, Nothing, Nothing>(arg, default(Nothing), default(Nothing));
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -434,7 +418,7 @@ namespace System.Text
         public bool TryFormat<T0, T1>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing), 2);
+            var pa = new ParamsArray<T0, T1, Nothing>(arg0, arg1, default(Nothing));
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -451,7 +435,7 @@ namespace System.Text
         public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2, 3);
+            var pa = new ParamsArray<T0, T1, T2>(arg0, arg1, arg2);
             return TryFormat(destination, out charsWritten, provider, in pa);
         }
 
@@ -487,24 +471,29 @@ namespace System.Text
 
             if (_numArgs == 0)
             {
+                if (destination.Length < _literalString.Length)
+                {
+                    charsWritten = 0;
+                    return false;
+                }
                 _literalString.AsSpan().CopyTo(destination);
-                charsWritten = Math.Min(_literalString.Length, destination.Length);
-                return destination.Length > _literalString.Length;
+                charsWritten = _literalString.Length;;
+                return true;
             }
 
             ParamsArray<object?, object?, object?> pa;
             switch (args!.Length)
             {
                 case 1:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null, 1);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], null, null);
                     break;
 
                 case 2:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null, 2);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], null);
                     break;
                 
                 case 3:
-                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2], 3);
+                    pa = new ParamsArray<object?, object?, object?>(args[0], args[1], args[2]);
                     break;
                 
                 default:
