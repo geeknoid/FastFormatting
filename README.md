@@ -32,8 +32,21 @@ Here's output from the benchmark:
 # Example
 
 ```csharp
-    var sf = new StringFormatter("Hello {0}");
-    var str = sf.Format("World");
+var str1 = new StringMaker()
+    .Append("Hello ")
+    .Append("World ")
+    .Append(42, "", null, 5)
+    .ExtractString();
+Console.WriteLine(str1);     // prints Hello World      42
 
-    Console.WriteLine(str);     // prints Hello World
+var span = new StringMaker()
+    .Append("Hello ")
+    .Append("World ")
+    .Append(42)
+    .ExtractSpan();
+Console.WriteLine(span.ToString());     // prints Hello World 42
+
+var sf = new StringFormatter("Hello {0}");
+var str3 = sf.Format(null, "World");
+Console.WriteLine(str3);     // prints Hello World
 ```
