@@ -93,29 +93,6 @@ namespace FastFormatting
             return this;
         }
 
-        public StringMaker Append(ReadOnlySpan<char> value)
-        {
-            if (_length > _chars.Length - value.Length)
-            {
-                if (!Expand(value.Length)) return this;
-            }
-
-            value.CopyTo(_chars.Slice(_length));
-            _length += value.Length;
-            return this;
-        }
-
-        public StringMaker Append(ReadOnlySpan<char> value, int width)
-        {
-            if (_length > _chars.Length - value.Length)
-            {
-                if (!Expand(value.Length)) return this;
-            }
-
-            value.CopyTo(_chars.Slice(_length));
-            return FinishAppend(value.Length, width);
-        }
-
         public StringMaker Append(string? value)
         {
             if (value == null)
@@ -125,7 +102,7 @@ namespace FastFormatting
 
             if (_length > _chars.Length - value.Length)
             {
-                Expand(value.Length);
+                if (!Expand(value.Length)) return this;
             }
 
             value.AsSpan().CopyTo(_chars.Slice(_length));
@@ -142,6 +119,19 @@ namespace FastFormatting
             }
 
             return FinishAppend(value, width);
+        }
+
+        public StringMaker Append(ReadOnlySpan<char> value) => Append(value, 0);
+
+        public StringMaker Append(ReadOnlySpan<char> value, int width)
+        {
+            if (_length > _chars.Length - value.Length)
+            {
+                if (!Expand(value.Length)) return this;
+            }
+
+            value.CopyTo(_chars.Slice(_length));
+            return FinishAppend(value.Length, width);
         }
 
         public StringMaker Append(char value)
