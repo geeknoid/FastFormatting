@@ -28,7 +28,7 @@ namespace FastFormatting
             public short ArgIndex { get; }
 
             /// <summary>
-            /// The width of the formatted value in characters. If this is negative, it indicates to right-justify
+            /// The width of the formatted value in characters. If this is negative, it indicates to left-justify
             /// and the field width is then the absolute value.
             /// </summary>
             public short ArgWidth { get; }

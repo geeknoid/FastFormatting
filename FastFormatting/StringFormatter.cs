@@ -615,15 +615,19 @@ namespace FastFormatting
                     sm.Append(a, argWidth);
                     break;
 
+                case char a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case decimal a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
                 case DateTime a:
                     sm.Append(a, argFormat, provider, argWidth);
                     break;
 
                 case TimeSpan a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case decimal a:
                     sm.Append(a, argFormat, provider, argWidth);
                     break;
 

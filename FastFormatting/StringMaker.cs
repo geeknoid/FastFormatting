@@ -40,20 +40,18 @@ namespace FastFormatting
 
         public void Dispose()
         {
-            var a = _array;
+            if (_array != null)
+            {
+                ArrayPool<char>.Shared.Return(_array);
+            }
 
             // clear out everything to prevent accidental reuse
             this = default;
-
-            if (a != null)
-            {
-                ArrayPool<char>.Shared.Return(a);
-            }
         }
 
         public string ExtractString()
         {
-            string s = _chars.Slice(0, _length).ToString();
+            var s = _chars.Slice(0, _length).ToString();
             Dispose();
             return s;
         }
@@ -83,18 +81,7 @@ namespace FastFormatting
         public int Length => _length;
         public bool Overflowed => _overflowed;
 
-        public StringMaker Append(char value)
-        {
-            if (_length == _chars.Length)
-            {
-                if (!Expand(1)) return this;
-            }
-
-            _chars[_length++] = value;
-            return this;
-        }
-
-        public StringMaker Append(char value, int count)
+        public StringMaker Fill(char value, int count)
         {
             if (_length > _chars.Length - count)
             {
@@ -116,6 +103,17 @@ namespace FastFormatting
             value.CopyTo(_chars.Slice(_length));
             _length += value.Length;
             return this;
+        }
+
+        public StringMaker Append(ReadOnlySpan<char> value, int width)
+        {
+            if (_length > _chars.Length - value.Length)
+            {
+                if (!Expand(value.Length)) return this;
+            }
+
+            value.CopyTo(_chars.Slice(_length));
+            return FinishAppend(value.Length, width);
         }
 
         public StringMaker Append(string? value)
@@ -144,6 +142,28 @@ namespace FastFormatting
             }
 
             return FinishAppend(value, width);
+        }
+
+        public StringMaker Append(char value)
+        {
+            if (_length == _chars.Length)
+            {
+                if (!Expand(1)) return this;
+            }
+
+            _chars[_length++] = value;
+            return this;
+        }
+
+        public StringMaker Append(char value, int width)
+        {
+            if (_length == _chars.Length)
+            {
+                if (!Expand(1)) return this;
+            }
+
+            _chars[_length] = value;
+            return FinishAppend(1, width);
         }
 
         public StringMaker Append(sbyte value) => Append(value, string.Empty, null, 0);
@@ -321,11 +341,11 @@ namespace FastFormatting
                 if (leftAlign)
                 {
                     Append(result);
-                    Append(' ', padding);
+                    Fill(' ', padding);
                 }
                 else
                 {
-                    Append(' ', padding);
+                    Fill(' ', padding);
                     Append(result);
                 }
             }

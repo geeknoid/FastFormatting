@@ -14,8 +14,6 @@ namespace FastFormatting
         /// </remarks>
         internal readonly ref struct Params<T0, T1, T2>
         {
-            public const int StronglyTypedArgs = 3;
-
             private readonly T0 _arg0;
             private readonly T1 _arg1;
             private readonly T2 _arg2;
