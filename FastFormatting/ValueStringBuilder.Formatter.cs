@@ -336,7 +336,7 @@ namespace System.Text
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public ReadOnlySpan<char> Append(ISpanFormattable value, ReadOnlySpan<char> format, IFormatProvider? provider)
+        public ReadOnlySpan<char> Append<T>(T value, ReadOnlySpan<char> format, IFormatProvider? provider) where T : ISpanFormattable
         {
             var s = _chars.Slice(_pos);
             int charsWritten;
