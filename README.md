@@ -1,25 +1,22 @@
 # Fast Formatting
 
 This project is a proof-of-concept showing how to substantially improve string formatting performance in .NET.
-There are three innovations in this code relative to the classic String.Format method:
+There are two new types to support faster formatting:
 
-* The API is divided into parts. One part parses the composite format string, while
-the other part is responsible for the actual formatting work. You typically parse
-your format strings as part of initializing static StringFormatter instances,
-and then during execution your code can use the static StringFormatter instances
-to actually format arguments.
+* The `StringMaker` type is a supercharged version of the classic `StringBuilder` type. It
+is designed for efficiently building up a string or span by appending together bits and
+pieces. The implementation tries to avoid any memory allocations when it can, and if you
+supply your own span to the constructor, it can operate entirely without allocating memory.
+When used in this memory, totally performance is around 4x faster than using `StringBuilder`.
 
-* The StringFormatter.Format API avoids boxing for up to 3 formatting arguments.
-In that case, the API does only a single allocation for the final string and typically
-has no other intermediate allocations.
-
-* The StringFormatter.TryFormat API formats into a preallocated Span<char>, enabling completely
-0 allocation and 0 copy string formatting. It took 20 years, but formatting in C# is now as fast
-as C's sprintf function!'
-
-This code is designed to eventually be put into the .NET libraries. As such,
-I borrowed a bit of private code from the .NET libraries, you'll find those 
-files in the FastFormatting/Borrowed folder.
+* The `StringFormatter` type is built on top of `StringMaker` and is designed to support the
+normal .NET composite formatting model, such as you use with `String.Format`. The type splits
+the normal formatting step in two in order to boost performance of the formatting process. 
+The first step is parsing the composite format string into an efficient form. This step is done
+by create a `StringFormatter` instance. Once you have this instance, you can use it to format 
+a set of arguments by calling the `Format` method, which is about 2x as fast as `String.Format`.
+You can also use the `TryFormat` method to format directly into your own span, which is 4x faster
+than `String.Format`.
 
 Here's output from the benchmark:
 
@@ -40,6 +37,3 @@ Here's output from the benchmark:
 
     Console.WriteLine(str);     // prints Hello World
 ```
-# Implementation Todos
-
-* Add more unit tests

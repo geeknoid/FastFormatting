@@ -1,6 +1,6 @@
 // © Microsoft Corporation. All rights reserved.
 
-namespace System.Text
+namespace FastFormatting
 {
     using System;
     using System.Collections.Generic;
@@ -46,7 +46,7 @@ namespace System.Text
             char ch = '\0';
             var segments = new List<FormatterSegment>();
             int numArgs = 0;
-            var literal = new ValueStringBuilder(format.Length);
+            var literal = new StringMaker(format.Length);
 
             for (; ; )
             {
@@ -103,7 +103,7 @@ namespace System.Text
                     }
 
                     // done
-                    _literalString = literal.ToString();
+                    _literalString = literal.ExtractString();
                     _numArgs = numArgs;
                     _segments = segments.ToArray();
                     return;
@@ -145,7 +145,7 @@ namespace System.Text
                 }
 
                 // parse the optional field width
-                bool leftJustify = false;
+                bool leftAligned = false;
                 int argWidth = 0;
                 if (ch == ',')
                 {
@@ -160,19 +160,19 @@ namespace System.Text
                     // did we run out of steam
                     if (pos == len)
                     {
-                        throw new FormatException(SR.Format_InvalidString);
+                        throw new FormatException($"Invalid field width for argument {numArgs + 1}");
                     }
 
                     ch = format[pos];
                     if (ch == '-')
                     {
-                        leftJustify = true;
+                        leftAligned = true;
                         pos++;
 
                         // did we run out of steam?
                         if (pos == len)
                         {
-                            throw new FormatException(SR.Format_InvalidString);
+                            throw new FormatException($"Invalid field width for argument {numArgs + 1}");
                         }
 
                         ch = format[pos];
@@ -180,7 +180,7 @@ namespace System.Text
 
                     if (ch < '0' || ch > '9')
                     {
-                        throw new FormatException("Invalid character in field width specification.");
+                        throw new FormatException($"Invalid character in field width for argument {numArgs + 1}.");
                     }
 
                     int val = 0;
@@ -192,19 +192,24 @@ namespace System.Text
                         // did we run out of steam?
                         if (pos == len)
                         {
-                            throw new FormatException(SR.Format_InvalidString);
+                            throw new FormatException($"Invalid format string");
                         }
 
                         // did we get a number that's too big?
                         if (val > short.MaxValue)
                         {
-                            throw new FormatException("Field width value exceeds limit.");
+                            throw new FormatException($"Field width value exceeds limit for argument {numArgs+1}.");
                         }
 
                         ch = format[pos];
                     } while (ch >= '0' && ch <= '9');
 
                     argWidth = val;
+                }
+
+                if (leftAligned)
+                {
+                    argWidth = -argWidth;
                 }
 
                 // skip whitespace
@@ -259,11 +264,6 @@ namespace System.Text
                 if (numArgs >= short.MaxValue)
                 {
                     throw new FormatException("Must have less than 32768 arguments");
-                }
-
-                if (!leftJustify)
-                {
-                    argWidth = -argWidth;
                 }
 
                 int total = literal.Length - segStart;
@@ -507,25 +507,157 @@ namespace System.Text
         private string Format<T0, T1, T2>(IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
         {
             int estimatedSize = EstimateResultSize(in pa);
-            var formatter = (estimatedSize >= MaxStackAlloc) ? new ValueStringBuilder(estimatedSize) : new ValueStringBuilder(stackalloc char[MaxStackAlloc]);
-            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
-            return formatter.ToString();
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
+            Format<T0, T1, T2>(ref sm, provider, in pa);
+            return sm.ExtractString();
         }
 
         private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
         {
-            var formatter = new ValueStringBuilder(destination);
-            formatter.Format<T0, T1, T2>(provider, in pa, _segments, _literalString);
-            
-            if (formatter.Length > destination.Length)
-            {
-                // there was a reallocation, so the output didn't fit...
-                charsWritten = 0;
-                return false;
-            }
+            var sm = new StringMaker(destination, false);
+            Format<T0, T1, T2>(ref sm, provider, in pa);
+            charsWritten = sm.Length;
+            var overflowed = sm.Overflowed;
+            sm.Dispose();
+            return !overflowed;
+        }
 
-            charsWritten = formatter.Length;
-            return true;
+        // Given this has 3 generics, it can lead to a lot of jitted code. We thus keep
+        // the work done in here to a strict minimum, and dispatch to lower-arity methods
+        // ASAP.
+        //
+        // This code assumes there are sufficient arguments in the ParamsArray to satisfy the needs
+        // of the format operation, so the upstream callers should validate this a priori.
+        private void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, in ParamsArray<T0, T1, T2> pa)
+        {
+            int literalIndex = 0;
+            foreach (var segment in _segments)
+            {
+                int literalCount = segment.LiteralCount;
+                if (literalCount > 0)
+                {
+                    // the segment has some literal text
+                    sm.Append(_literalString.AsSpan(literalIndex, literalCount));
+                    literalIndex += literalCount;
+                }
+
+                var argIndex = segment.ArgIndex;
+                if (argIndex >= 0)
+                {
+                    // the segment has an arg to format
+                    switch (argIndex)
+                    {
+                        case 0:
+                            AppendArg(ref sm, pa.Arg0, segment.ArgFormat, segment.ArgWidth, provider);
+                            break;
+
+                        case 1:
+                            AppendArg(ref sm, pa.Arg1, segment.ArgFormat, segment.ArgWidth, provider);
+                            break;
+
+                        case 2:
+                            AppendArg(ref sm, pa.Arg2, segment.ArgFormat, segment.ArgWidth, provider);
+                            break;
+
+                        default:
+                            AppendReferenceArg(ref sm, pa.Args[argIndex - 3], segment.ArgFormat, segment.ArgWidth, provider);
+                            break;
+                    }
+                }
+            }
+        }
+
+        private void AppendArg<T>(ref StringMaker sm, T arg, string argFormat, int argWidth, IFormatProvider? provider)
+        {
+            switch (arg)
+            {
+                case int a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case long a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case double a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case float a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case uint a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case ulong a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case short a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case ushort a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case byte a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case sbyte a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case bool a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case DateTime a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case TimeSpan a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case decimal a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                default:
+                    AppendReferenceArg(ref sm, arg, argFormat, argWidth, provider);
+                    break;
+            }
+        }
+
+        private void AppendReferenceArg(ref StringMaker sm, object? arg, string argFormat, int argWidth, IFormatProvider? provider)
+        {
+            switch (arg)
+            {
+                case string a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case ISpanFormattable a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case IFormattable a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case object a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                default:
+                    // when arg == null
+                    sm.Append(string.Empty, argWidth);
+                    break;
+            }
         }
 
         private int EstimateResultSize<T0, T1, T2>(in ParamsArray<T0, T1, T2> pa)

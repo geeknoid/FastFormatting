@@ -5,7 +5,6 @@ namespace FastFormatting.Benchmarks
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Running;
     using System;
-    using System.Text;
 
     [MemoryDiagnoser]
     public class Bench

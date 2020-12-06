@@ -1,7 +1,9 @@
 // © Microsoft Corporation. All rights reserved.
 
-namespace System
+namespace FastFormatting
 {
+    using System;
+
     /// <summary>
     /// Non-boxing holder of multiple parameters
     /// </summary>

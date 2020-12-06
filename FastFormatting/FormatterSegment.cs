@@ -1,6 +1,6 @@
 // © Microsoft Corporation. All rights reserved.
 
-namespace System.Text
+namespace FastFormatting
 {
     /// <summary>
     /// A chunk of formatting information.

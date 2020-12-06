@@ -5,9 +5,17 @@ namespace FastFormatting.Tests
     using System;
     using System.Text;
     using Xunit;
+    using Xunit.Abstractions;
 
     public class FormatTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public FormatTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         // do a formatting operation, comparing the results against classic String.Format
         private void CheckExpansion<T>(T arg)
         {
@@ -300,6 +308,8 @@ namespace FastFormatting.Tests
         {
             for (int width = -10; width < 10; width++)
             {
+                _output.WriteLine($"Width {width}");
+
                 CheckFormat($"{{0,{width}}}", "X");
                 CheckFormat($"{{0,{width}}}", "XY");
                 CheckFormat($"{{0,{width}}}", "XYZ");
