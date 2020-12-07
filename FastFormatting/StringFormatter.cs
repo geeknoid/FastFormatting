@@ -34,7 +34,7 @@ namespace FastFormatting
         /// <summary>
         /// Parses a composite format string into an efficient form for later use.
         /// </summary>
-        public StringFormatter(string format)
+        public StringFormatter(ReadOnlySpan<char> format)
         {
             if (format == null)
             {
@@ -249,7 +249,7 @@ namespace FastFormatting
 
                     if (pos != argFormatStart)
                     {
-                        argFormat = format.Substring(argFormatStart, pos - argFormatStart);
+                        argFormat = format.Slice(argFormatStart, pos - argFormatStart).ToString();
                     }
                 }
 
