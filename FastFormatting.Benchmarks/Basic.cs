@@ -18,6 +18,7 @@ namespace FastFormatting.Benchmarks
         public static readonly char[] StringFormatterWithSpanResults = new char[1024];
         public static string Hello = "Hello";
         public static int FourtyTwo = 42;
+        public static readonly char[] StringMakerBuffer = new char[1024];
 
         [Benchmark]
         public void TestClassicStringFormat()
@@ -52,6 +53,37 @@ namespace FastFormatting.Benchmarks
             for (int i = 0; i < Iterations; i++)
             {
                 _ = _sf.TryFormat(StringFormatterWithSpanResults.AsSpan(), out int charsWritten, null, Hello, FourtyTwo, i);
+            }
+        }
+
+        [Benchmark]
+        public void TestStringMaker()
+        {
+            Span<char> span = stackalloc char[128];
+            for (int i = 0; i < Iterations; i++)
+            {
+                var sm = new StringMaker(span);
+                sm.Append(Hello);
+                sm.Append(" Some literal portion in the middle ");
+                sm.Append(FourtyTwo);
+                sm.Append(" ");
+                sm.Append(i);
+                _ = sm.ExtractString();
+            }
+        }
+
+        [Benchmark]
+        public void TestStringMakerWithSpan()
+        {
+            for (int i = 0; i < Iterations; i++)
+            {
+                var sm = new StringMaker(StringMakerBuffer);
+                sm.Append(Hello);
+                sm.Append(" Some literal portion in the middle ");
+                sm.Append(FourtyTwo);
+                sm.Append(" ");
+                sm.Append(i);
+                _ = sm.ExtractSpan();
             }
         }
     }

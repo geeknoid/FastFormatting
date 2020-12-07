@@ -21,30 +21,31 @@ than `String.Format`.
 Here's output from the benchmark:
 
 ```
-|                      Method |     Mean |    Error |   StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
-|---------------------------- |---------:|---------:|---------:|----------:|----------:|---------:|-----------:|
-|     TestClassicStringFormat | 46.02 ms | 0.865 ms | 1.515 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800057 B |
-|           TestInterpolation | 47.91 ms | 0.943 ms | 1.523 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800523 B |
-|         TestStringFormatter | 25.59 ms | 0.508 ms | 0.903 ms | 2187.5000 |  906.2500 | 281.2500 | 12000025 B |
-| TestStringFormatterWithSpan | 10.86 ms | 0.182 ms | 0.224 ms |         - |         - |        - |        4 B |
+|                      Method |     Mean |    Error |   StdDev |   Median |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
+|---------------------------- |---------:|---------:|---------:|---------:|----------:|----------:|---------:|-----------:|
+|     TestClassicStringFormat | 46.68 ms | 0.922 ms | 1.882 ms | 46.27 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800055 B |
+|           TestInterpolation | 45.17 ms | 0.888 ms | 1.578 ms | 44.94 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800053 B |
+|         TestStringFormatter | 25.31 ms | 0.495 ms | 0.463 ms | 25.07 ms | 2187.5000 |  906.2500 | 281.2500 | 12000024 B |
+| TestStringFormatterWithSpan | 12.01 ms | 0.366 ms | 1.079 ms | 11.52 ms |         - |         - |        - |        4 B |
 ```
 
 # Example
 
 ```csharp
-var str1 = new StringMaker()
-    .Append("Hello ")
-    .Append("World ")
-    .Append(42, "", null, 5)
-    .ExtractString();
+var sm = new StringMaker();
+sm.Append("Hello ");
+sm.Append("World ");
+sm.Append(42, "", null, 5);
+var str1 = sm.ExtractString();
 Console.WriteLine(str1);     // prints Hello World      42
 
-var span = new StringMaker()
-    .Append("Hello ")
-    .Append("World ")
-    .Append(42)
-    .ExtractSpan();
-Console.WriteLine(span.ToString());     // prints Hello World 42
+sm = new StringMaker();
+sm.Append("Hello ");
+sm.Append("World ");
+sm.Append(42);
+var span = sm.ExtractSpan();
+var str2 = span.ToString();
+Console.WriteLine(str2);     // prints Hello World 42
 
 var sf = new StringFormatter("Hello {0}");
 var str3 = sf.Format(null, "World");
