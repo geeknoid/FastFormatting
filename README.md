@@ -7,7 +7,7 @@ There are two new types to support faster formatting:
 is designed for efficiently building up a string or span by appending together bits and
 pieces. The implementation tries to avoid any memory allocations when it can, and if you
 supply your own span to the constructor, it can operate entirely without allocating memory.
-When used in this memory, totally performance is around 7x faster than using `StringBuilder`.
+When used in this memory, totally performance is around 9x faster than using `StringBuilder`.
 
 * The `StringFormatter` type is built on top of `StringMaker` and is designed to support the
 normal .NET composite formatting model, such as you use with `String.Format`. The type splits
@@ -23,12 +23,13 @@ Here's output from the benchmark:
 ```
 |                      Method |      Mean |     Error |    StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
 |---------------------------- |----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
-|     TestClassicStringFormat | 46.979 ms | 0.9339 ms | 1.3393 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800153 B |
-|           TestInterpolation | 45.558 ms | 0.8942 ms | 1.1309 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800541 B |
-|         TestStringFormatter | 24.727 ms | 0.4271 ms | 0.5554 ms | 2187.5000 |  906.2500 | 281.2500 | 12000022 B |
-| TestStringFormatterWithSpan | 10.121 ms | 0.2002 ms | 0.4757 ms |         - |         - |        - |        4 B |
-|             TestStringMaker |  7.744 ms | 0.1469 ms | 0.3066 ms | 2867.1875 |         - |        - | 11999922 B |
-|     TestStringMakerWithSpan |  5.224 ms | 0.0606 ms | 0.0538 ms |         - |         - |        - |        2 B |
+|     TestClassicStringFormat | 44.866 ms | 0.8916 ms | 1.4897 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800539 B |
+|           TestInterpolation | 45.272 ms | 0.8490 ms | 1.5524 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800515 B |
+|           TestStringBuilder | 49.877 ms | 0.9750 ms | 1.3016 ms | 2888.8889 | 1111.1111 | 333.3333 | 16800055 B |
+|         TestStringFormatter | 25.101 ms | 0.5015 ms | 0.9170 ms | 2187.5000 |  906.2500 | 281.2500 | 12000022 B |
+| TestStringFormatterWithSpan |  9.574 ms | 0.1785 ms | 0.1490 ms |         - |         - |        - |        4 B |
+|             TestStringMaker |  7.308 ms | 0.1203 ms | 0.1564 ms | 2859.3750 |         - |        - | 11999924 B |
+|     TestStringMakerWithSpan |  5.043 ms | 0.0988 ms | 0.1832 ms |         - |         - |        - |        2 B |
 ```
 
 # Example

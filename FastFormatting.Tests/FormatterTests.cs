@@ -7,11 +7,11 @@ namespace FastFormatting.Tests
     using Xunit;
     using Xunit.Abstractions;
 
-    public class FormatTests
+    public class FormatterTests
     {
         private readonly ITestOutputHelper _output;
 
-        public FormatTests(ITestOutputHelper output)
+        public FormatterTests(ITestOutputHelper output)
         {
             _output = output;
         }
@@ -161,7 +161,7 @@ namespace FastFormatting.Tests
 
         private void CheckBadFormatString(string format)
         {
-            Assert.Throws<FormatException>(() => _ = String.Format(format, 1, 2, 3, 4, 5, 6, 7));
+            Assert.Throws<FormatException>(() => _ = string.Format(format, 1, 2, 3, 4, 5, 6, 7));
             Assert.Throws<FormatException>(() => _ = new StringFormatter(format));
         }
 
@@ -377,6 +377,7 @@ namespace FastFormatting.Tests
             CheckFormat("{0}", (ulong)42);
             CheckFormat("{0}", (float)42.0);
             CheckFormat("{0}", (double)42.0);
+            CheckFormat("{0}", 'x');
             CheckFormat("{0}", DateTime.Now);
             CheckFormat("{0}", new TimeSpan(42));
             CheckFormat("{0}", true);
@@ -401,6 +402,7 @@ namespace FastFormatting.Tests
             CheckExpansion((ulong)42);
             CheckExpansion((float)42.0);
             CheckExpansion((double)42.0);
+            CheckExpansion('X');
             CheckExpansion(DateTime.Now);
             CheckExpansion(new TimeSpan(42));
             CheckExpansion(true);
@@ -760,6 +762,31 @@ namespace FastFormatting.Tests
             CheckFormat("{0,4:d4}", -100); 
             CheckFormat("{0,4:d4}", -123); 
             CheckFormat("{0,4:d4}", -1024); 
+        }
+
+        [Fact]
+        public void TestNumArgsNeeded()
+        {
+            var sf = new StringFormatter("{0}");
+            Assert.Equal(1, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0}{1}");
+            Assert.Equal(2, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0,3}");
+            Assert.Equal(1, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0,3:d}");
+            Assert.Equal(1, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0,3:d}{0}");
+            Assert.Equal(1, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0,3:d}{1}");
+            Assert.Equal(2, sf.NumArgumentsNeeded);
+
+            sf = new StringFormatter("{0,3:d}{9}");
+            Assert.Equal(10, sf.NumArgumentsNeeded);
         }
     }
 }

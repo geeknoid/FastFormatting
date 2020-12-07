@@ -13,19 +13,19 @@ namespace FastFormatting
         private char[]? _array;
         private Span<char> _chars;
         private int _length;
-        private bool _allowExpansion;
+        private bool _blockExpansion;
         private bool _overflowed;
 
-        public StringMaker(Span<char> initialBuffer, bool allowExpansion = true)
+        public StringMaker(Span<char> initialBuffer, bool blockExpansion = false)
         {
             _array = null;
             _chars = initialBuffer;
             _length = 0;
-            _allowExpansion = allowExpansion;
+            _blockExpansion = blockExpansion;
             _overflowed = false;
         }
 
-        public StringMaker(int initialCapacity = DefaultCapacity)
+        public StringMaker(int initialCapacity)
         {
             if (initialCapacity < 0)
             {
@@ -35,7 +35,7 @@ namespace FastFormatting
             _array = ArrayPool<char>.Shared.Rent(initialCapacity);
             _chars = _array;
             _length = 0;
-            _allowExpansion = true;
+            _blockExpansion = false;
             _overflowed = false;
         }
 
@@ -478,7 +478,7 @@ namespace FastFormatting
 
         private bool Expand(int neededCapacity = 0)
         {
-            if (!_allowExpansion)
+            if (_blockExpansion)
             {
                 _overflowed = true;
                 return false;
