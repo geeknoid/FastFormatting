@@ -5,6 +5,7 @@ namespace FastFormatting.Benchmarks
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Running;
     using System;
+    using System.Text;
 
     [MemoryDiagnoser]
     public class Bench
@@ -16,9 +17,11 @@ namespace FastFormatting.Benchmarks
         public static readonly string[] InterpolationResults = new string[Iterations];
         public static readonly string[] StringFormatterResults = new string[Iterations];
         public static readonly char[] StringFormatterWithSpanResults = new char[1024];
+        public static readonly string[] StringBuilderResults = new string[Iterations];
         public static string Hello = "Hello";
         public static int FourtyTwo = 42;
         public static readonly char[] StringMakerBuffer = new char[1024];
+        public static readonly StringBuilder Builder = new StringBuilder(1024);
 
         [Benchmark]
         public void TestClassicStringFormat()
@@ -35,6 +38,17 @@ namespace FastFormatting.Benchmarks
             for (int i = 0; i < Iterations; i++)
             {
                 InterpolationResults[i] = $"{Hello} Some literal portion in the middle {FourtyTwo} {i}";
+            }
+        }
+
+        [Benchmark]
+        public void TestStringBuilder()
+        {
+            for (int i = 0; i < Iterations; i++)
+            {
+                Builder.Clear();
+                Builder.AppendFormat("{0} Some literal portion in the middle {1} {2}", Hello, FourtyTwo, i);
+                StringBuilderResults[i] = Builder.ToString();
             }
         }
 
