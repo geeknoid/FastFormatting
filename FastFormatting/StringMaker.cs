@@ -4,6 +4,7 @@ namespace FastFormatting
 {
     using System;
     using System.Buffers;
+    using System.ComponentModel;
 
     public ref partial struct StringMaker
     {
@@ -93,23 +94,7 @@ namespace FastFormatting
             return this;
         }
 
-        public StringMaker Append(string? value)
-        {
-            if (value == null)
-            {
-                return this;
-            }
-
-            if (_length > _chars.Length - value.Length)
-            {
-                if (!Expand(value.Length)) return this;
-            }
-
-            value.AsSpan().CopyTo(_chars.Slice(_length));
-            _length += value.Length;
-
-            return this;
-        }
+        public StringMaker Append(string? value) => Append(value, 0);
 
         public StringMaker Append(string? value, int width)
         {
@@ -117,6 +102,8 @@ namespace FastFormatting
             {
                 return FinishAppend(string.Empty, width);
             }
+
+            // TODO: optimize the right justified case
 
             return FinishAppend(value, width);
         }
@@ -130,8 +117,9 @@ namespace FastFormatting
                 if (!Expand(value.Length)) return this;
             }
 
-            value.CopyTo(_chars.Slice(_length));
-            return FinishAppend(value.Length, width);
+            // TODO: optimize the right justified case
+
+            return FinishAppend(value, width);
         }
 
         public StringMaker Append(char value)
@@ -151,6 +139,8 @@ namespace FastFormatting
             {
                 if (!Expand(1)) return this;
             }
+
+            // TODO: optimize the right justified case
 
             _chars[_length] = value;
             return FinishAppend(1, width);
@@ -293,22 +283,23 @@ namespace FastFormatting
             int padding = (width - charsWritten);
             if (padding > 0)
             {
+                if (_length > _chars.Length - padding)
+                {
+                    if (!Expand(padding)) return this;
+                }
+
                 if (leftAlign)
                 {
-                    Append(' ', padding);
+                    _chars.Slice(_length, padding).Fill(' ');
                 }
                 else
                 {
-                    if (_length > _chars.Length - padding)
-                    {
-                        if (!Expand(padding)) return this;
-                    }
-
-                    int insertion = _length - charsWritten;
-                    _chars.Slice(insertion, charsWritten).CopyTo(_chars.Slice(insertion + padding));
-                    _chars.Slice(insertion, padding).Fill(' ');
-                    _length += padding;
+                    int start = _length - charsWritten;
+                    _chars.Slice(start, charsWritten).CopyTo(_chars.Slice(start + padding));
+                    _chars.Slice(start, padding).Fill(' ');
                 }
+
+                _length += padding;
             }
 
             return this;
@@ -317,7 +308,6 @@ namespace FastFormatting
         private StringMaker FinishAppend(ReadOnlySpan<char> result, int width)
         {
             var leftAlign = false;
-
             if (width < 0)
             {
                 width = -width;
@@ -325,25 +315,36 @@ namespace FastFormatting
             }
 
             int padding = (width - result.Length);
+            int extra = result.Length;
+            if (padding > 0)
+            {
+                extra += padding;
+            }
+
+            if (_length > _chars.Length - extra)
+            {
+                if (!Expand(extra)) return this;
+            }
 
             if (padding > 0)
             {
                 if (leftAlign)
                 {
-                    Append(result);
-                    Fill(' ', padding);
+                    result.CopyTo(_chars.Slice(_length));
+                    _chars.Slice(_length + result.Length, padding).Fill(' ');
                 }
                 else
                 {
-                    Fill(' ', padding);
-                    Append(result);
+                    _chars.Slice(_length, padding).Fill(' ');
+                    result.CopyTo(_chars.Slice(_length + padding));
                 }
             }
             else
             {
-                Append(result);
+                result.CopyTo(_chars.Slice(_length));
             }
 
+            _length += extra;
             return this;
         }
 

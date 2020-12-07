@@ -22,11 +22,11 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
 
-            var format = "{0,256}{1}";
+            var format = "{0,256} {1}";
 
-            expectedResult = String.Format(format, 42, arg);
+            expectedResult = String.Format(format, 3.14, arg);
             var sf = new StringFormatter(format);
-            actualResult1 = sf.Format(null, 42, arg);
+            actualResult1 = sf.Format(null, 3.14, arg);
             Assert.Equal(expectedResult, actualResult1);
         }
 
