@@ -103,7 +103,12 @@ namespace FastFormatting
                 return FinishAppend(string.Empty, width);
             }
 
-            // TODO: optimize the right justified case
+            if (width > value.Length)
+            {
+                // optimize the right-aligned case by avoiding a copy
+                Fill(' ', width - value.Length);
+                return FinishAppend(value, 0);
+            }
 
             return FinishAppend(value, width);
         }
@@ -117,7 +122,12 @@ namespace FastFormatting
                 if (!Expand(value.Length)) return this;
             }
 
-            // TODO: optimize the right justified case
+            if (width > value.Length)
+            {
+                // optimize the right-aligned case by avoiding a copy
+                Fill(' ', width - value.Length);
+                return FinishAppend(value, 0);
+            }
 
             return FinishAppend(value, width);
         }
@@ -140,7 +150,13 @@ namespace FastFormatting
                 if (!Expand(1)) return this;
             }
 
-            // TODO: optimize the right justified case
+            if (width > 1)
+            {
+                // optimize the right-aligned case by avoiding a copy
+                Fill(' ', width - 1);
+                _chars[_length] = value;
+                return FinishAppend(1, 0);
+            }
 
             _chars[_length] = value;
             return FinishAppend(1, width);
