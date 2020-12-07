@@ -23,10 +23,12 @@ Here's output from the benchmark:
 ```
 |                      Method |     Mean |    Error |   StdDev |   Median |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
 |---------------------------- |---------:|---------:|---------:|---------:|----------:|----------:|---------:|-----------:|
-|     TestClassicStringFormat | 46.68 ms | 0.922 ms | 1.882 ms | 46.27 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800055 B |
-|           TestInterpolation | 45.17 ms | 0.888 ms | 1.578 ms | 44.94 ms | 2909.0909 | 1181.8182 | 363.6364 | 16800053 B |
-|         TestStringFormatter | 25.31 ms | 0.495 ms | 0.463 ms | 25.07 ms | 2187.5000 |  906.2500 | 281.2500 | 12000024 B |
-| TestStringFormatterWithSpan | 12.01 ms | 0.366 ms | 1.079 ms | 11.52 ms |         - |         - |        - |        4 B |
+|     TestClassicStringFormat | 45.306 ms | 0.8882 ms | 1.6016 ms | 45.605 ms | 2888.8889 | 1111.1111 | 333.3333 | 16800098 B |
+|           TestInterpolation | 46.278 ms | 0.9231 ms | 1.8857 ms | 45.727 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800517 B |
+|         TestStringFormatter | 24.990 ms | 0.4604 ms | 0.6302 ms | 25.011 ms | 2187.5000 |  906.2500 | 281.2500 | 12000040 B |
+| TestStringFormatterWithSpan | 11.166 ms | 0.2147 ms | 0.5225 ms | 10.991 ms |         - |         - |        - |        4 B |
+|             TestStringMaker |  8.932 ms | 0.1380 ms | 0.1152 ms |  8.922 ms | 2859.3750 |         - |        - | 11999920 B |
+|     TestStringMakerWithSpan |  6.416 ms | 0.1033 ms | 0.0967 ms |  6.418 ms |         - |         - |        - |        2 B |
 ```
 
 # Example
