@@ -7,7 +7,7 @@ There are two new types to support faster formatting:
 is designed for efficiently building up a string or span by appending together bits and
 pieces. The implementation tries to avoid any memory allocations when it can, and if you
 supply your own span to the constructor, it can operate entirely without allocating memory.
-When used in this memory, totally performance is around 9x faster than using `StringBuilder`.
+When used in this mode, total performance is around 9x faster than `StringBuilder`.
 
 * The `StringFormatter` type is built on top of `StringMaker` and is designed to support the
 normal .NET composite formatting model, such as you use with `String.Format`. The type splits
