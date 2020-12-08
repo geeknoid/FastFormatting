@@ -44,7 +44,7 @@ namespace FastFormatting
             char ch = '\0';
             var segments = new List<Segment>();
             int numArgs = 0;
-            var literal = new StringMaker(format.Length);
+            var literal = (format.Length >= MaxStackAlloc) ? new StringMaker(format.Length) : new StringMaker(stackalloc char[MaxStackAlloc]);
 
             for (; ; )
             {

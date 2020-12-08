@@ -10,7 +10,7 @@ namespace FastFormatting
         // TODO: Perhaps this number should be tunable by the user?
         private const int MaxCacheEntries = 128;
 
-        private static readonly ConcurrentDictionary<String, StringFormatter> _formatters = new();
+        private static readonly ConcurrentDictionary<string, StringFormatter> _formatters = new();
 
         private static StringFormatter GetFormatter(string format)
         {
