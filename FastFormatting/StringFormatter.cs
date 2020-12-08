@@ -10,25 +10,22 @@ namespace FastFormatting
     /// Provides highly efficient string formatting functionality.
     /// </summary>
     /// <remarks>
-    /// This class lets you optimize string formatting operations common with the <see cref="String.Format"  />
+    /// This type lets you optimize string formatting operations common with the <see cref="String.Format"  />
     /// method. This is useful for any situation where you need to repeatedly format the same string with 
     /// different arguments.
     /// 
-    /// This class works faster than String.Format because it parses the composite format string only once when
+    /// This type works faster than String.Format because it parses the composite format string only once when
     /// the instance is created, rather than doing it for every formatting operation.
     /// 
-    /// You first create an instance of this class, passing the composite format string that you intend to use.
+    /// You first create an instance of this type, passing the composite format string that you intend to use.
     /// Once the instance is created, you can call the <see cref="Format"/> method with arguments to use in the
     /// format operation.
-    /// 
-    /// Note that if you're only formatting a single string, it is more efficient to just use String.Format. This 
-    /// class is meant for repeated use.
     /// </remarks>
-    public partial class StringFormatter
+    public readonly partial struct StringFormatter
     {
-        readonly Segment[] _segments;  // info on the different chunks to process
-        readonly string _literalString;         // all literal text to be inserted into the output
-        readonly int _numArgs;                  // # args needed during format
+        readonly Segment[] _segments;     // info on the different chunks to process
+        readonly string _literalString;   // all literal text to be inserted into the output
+        readonly int _numArgs;            // # args needed during format
 
         private const int MaxStackAlloc = 128;  // = 256 bytes
 
@@ -711,65 +708,5 @@ namespace FastFormatting
         /// Gets the number of arguments required in order to produce a string with this instance.
         /// </summary>
         public int NumArgumentsNeeded => _numArgs;
-
-        #region Replacement for String.Format
-
-        private static readonly ConcurrentDictionary<String, StringFormatter> _formatters = new();
-
-        private static StringFormatter GetFormatter(string format)
-        {
-            return _formatters.GetOrAdd(format, key => new StringFormatter(format));
-        }
-
-        public static string Format<T>(string format, T arg)
-        {
-            return GetFormatter(format).Format(null, arg);
-        }
-
-        public static string Format<T>(IFormatProvider? provider, string format, T arg)
-        {
-            return GetFormatter(format).Format(provider, arg);
-        }
-
-        public static string Format<T0, T1>(string format, T0 arg0, T1 arg1)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1);
-        }
-
-        public static string Format<T0, T1>(IFormatProvider? provider, string format, T0 arg0, T1 arg1)
-        {
-            return GetFormatter(format).Format(provider, arg0, arg1);
-        }
-
-        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1, arg2);
-        }
-
-        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2)
-        {
-            return GetFormatter(format).Format(provider, arg0, arg1, arg2);
-        }
-
-        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1, arg2, args);
-        }
-
-        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
-        {
-            return GetFormatter(format).Format(provider, arg0, arg1, arg2, args);
-        }
-
-        public static string Format(string format, params object?[]? args)
-        {
-            return GetFormatter(format).Format(null, args);
-        }
-
-        public static string Format(IFormatProvider? provider, string format, params object?[]? args)
-        {
-            return GetFormatter(format).Format(provider, args);
-        }
-        #endregion
     }
 }

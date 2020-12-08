@@ -2,7 +2,7 @@
 
 namespace FastFormatting
 {
-    partial class StringFormatter
+    readonly partial struct StringFormatter
     {
         /// <summary>
         /// A chunk of formatting information.

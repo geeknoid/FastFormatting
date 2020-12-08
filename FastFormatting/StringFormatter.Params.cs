@@ -4,7 +4,7 @@ namespace FastFormatting
 {
     using System;
 
-    partial class StringFormatter
+    readonly partial struct StringFormatter
     {
         /// <summary>
         /// Non-boxing holder of multiple parameters
