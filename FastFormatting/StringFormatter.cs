@@ -221,8 +221,7 @@ namespace FastFormatting
                 // parse the optional argument format string
 
                 string argFormat = string.Empty;
-                if (ch == ':')
-                {
+                if (ch == ':')                {
                     pos++;
                     int argFormatStart = pos;
 

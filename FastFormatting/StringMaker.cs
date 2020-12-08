@@ -69,14 +69,6 @@ namespace FastFormatting
             return s;
         }
 
-        public void TestOverflow()
-        {
-            if (_overflowed)
-            {
-                throw new OverflowException();  // BUGBUG: not the right exception, but a good placeholder for now
-            }
-        }
-
         public int Length => _length;
         public bool Overflowed => _overflowed;
 
@@ -185,7 +177,7 @@ namespace FastFormatting
 
         public void Append(char value, int width)
         {
-            if (width == 0)
+            if (width >= -1 && width <= 1)
             {
                 if (_length == _chars.Length)
                 {
@@ -373,6 +365,17 @@ namespace FastFormatting
             FinishAppend(charsWritten, width);
         }
 
+        public void Append<T>(T value) where T : ISpanFormattable
+        {
+            int charsWritten;
+            while (!value.TryFormat(_chars.Slice(_length), out charsWritten, string.Empty, null))
+            {
+                if (!Expand()) return;
+            }
+
+            _length += charsWritten;
+        }
+
         public void Append<T>(T value, string format, IFormatProvider? provider, int width) where T : ISpanFormattable
         {
             int charsWritten;
@@ -384,9 +387,25 @@ namespace FastFormatting
             FinishAppend(charsWritten, width);
         }
 
+        public void Append(IFormattable value)
+        {
+            FinishAppend(value.ToString(string.Empty, null), 0);
+        }
+
         public void Append(IFormattable value, string format, IFormatProvider? provider, int width)
         {
             FinishAppend(value.ToString(format, provider), width);
+        }
+
+        public void Append(object? value)
+        {
+            if (value == null)
+            {
+                FinishAppend(string.Empty, 0);
+                return;
+            }
+
+            FinishAppend(value.ToString(), 0);
         }
 
         public void Append(object? value, int width)
