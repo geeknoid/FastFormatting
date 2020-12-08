@@ -54,3 +54,5 @@ var sf = new StringFormatter("Hello {0}");
 var str3 = sf.Format(null, "World");
 Console.WriteLine(str3);     // prints Hello World
 ```
+
+FastFormat("Hello {0}", name);

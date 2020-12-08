@@ -3,6 +3,7 @@
 namespace FastFormatting
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
 
     /// <summary>
@@ -710,5 +711,65 @@ namespace FastFormatting
         /// Gets the number of arguments required in order to produce a string with this instance.
         /// </summary>
         public int NumArgumentsNeeded => _numArgs;
+
+        #region Replacement for String.Format
+
+        private static readonly ConcurrentDictionary<String, StringFormatter> _formatters = new();
+
+        private static StringFormatter GetFormatter(string format)
+        {
+            return _formatters.GetOrAdd(format, key => new StringFormatter(format));
+        }
+
+        public static string ToString<T>(string format, T arg)
+        {
+            return GetFormatter(format).Format(null, arg);
+        }
+
+        public static string ToString<T>(IFormatProvider? provider, string format, T arg)
+        {
+            return GetFormatter(format).Format(provider, arg);
+        }
+
+        public static string Format<T0, T1>(string format, T0 arg0, T1 arg1)
+        {
+            return GetFormatter(format).Format(null, arg0, arg1);
+        }
+
+        public static string Format<T0, T1>(IFormatProvider? provider, string format, T0 arg0, T1 arg1)
+        {
+            return GetFormatter(format).Format(provider, arg0, arg1);
+        }
+
+        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2)
+        {
+            return GetFormatter(format).Format(null, arg0, arg1, arg2);
+        }
+
+        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2)
+        {
+            return GetFormatter(format).Format(provider, arg0, arg1, arg2);
+        }
+
+        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
+        {
+            return GetFormatter(format).Format(null, arg0, arg1, arg2, args);
+        }
+
+        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
+        {
+            return GetFormatter(format).Format(provider, arg0, arg1, arg2, args);
+        }
+
+        public static string Format(string format, params object?[]? args)
+        {
+            return GetFormatter(format).Format(null, args);
+        }
+
+        public static string Format(IFormatProvider? provider, string format, params object?[]? args)
+        {
+            return GetFormatter(format).Format(provider, args);
+        }
+        #endregion
     }
 }
