@@ -18,6 +18,10 @@ to format arguments by calling the `Format` method, which is about 2x as fast as
 You can also use the `TryFormat` method to format directly into your own span, which is 4x faster
 than `String.Format`.
 
+* 'StringFormatter` also includes some static methods that provide a 1-1 replacement for String.Format,
+but run 2x as fast. Just go through your code and replace all uses of `String.Format` with
+`StringFormatter.Format` and you're done: your code runs faster.
+
 Here's output from the benchmark:
 
 ```
@@ -53,6 +57,7 @@ Console.WriteLine(str2);     // prints Hello World 42
 var sf = new StringFormatter("Hello {0}");
 var str3 = sf.Format(null, "World");
 Console.WriteLine(str3);     // prints Hello World
-```
 
-FastFormat("Hello {0}", name);
+var str4 = StringFormatter.Format("Hello {0}", name);
+Console.WriteLine(str4);     // prints Hello World
+```

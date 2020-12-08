@@ -721,12 +721,12 @@ namespace FastFormatting
             return _formatters.GetOrAdd(format, key => new StringFormatter(format));
         }
 
-        public static string ToString<T>(string format, T arg)
+        public static string Format<T>(string format, T arg)
         {
             return GetFormatter(format).Format(null, arg);
         }
 
-        public static string ToString<T>(IFormatProvider? provider, string format, T arg)
+        public static string Format<T>(IFormatProvider? provider, string format, T arg)
         {
             return GetFormatter(format).Format(provider, arg);
         }

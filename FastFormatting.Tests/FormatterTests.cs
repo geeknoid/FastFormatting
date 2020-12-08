@@ -3,6 +3,7 @@
 namespace FastFormatting.Tests
 {
     using System;
+    using System.Globalization;
     using System.Text;
     using Xunit;
     using Xunit.Abstractions;
@@ -36,6 +37,8 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
             string? actualResult2 = null;
+            string? actualResult3 = null;
+            string? actualResult4 = null;
 
             expectedResult = String.Format(format, arg);
 
@@ -48,8 +51,13 @@ namespace FastFormatting.Tests
                 actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
+            actualResult3 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg);
+            actualResult4 = StringFormatter.Format(format, arg);
+
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         // do a formatting operation, comparing the results against classic String.Format
@@ -58,6 +66,8 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
             string? actualResult2 = null;
+            string? actualResult3 = null;
+            string? actualResult4 = null;
 
             expectedResult = String.Format(format, arg0, arg1);
 
@@ -71,8 +81,13 @@ namespace FastFormatting.Tests
                 actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
+            actualResult3 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1);
+            actualResult4 = StringFormatter.Format(format, arg0, arg1);
+
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         // do a formatting operation, comparing the results against classic String.Format
@@ -81,6 +96,8 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
             string? actualResult2 = null;
+            string? actualResult3 = null;
+            string? actualResult4 = null;
 
             expectedResult = String.Format(format, arg0, arg1, arg2);
 
@@ -94,8 +111,13 @@ namespace FastFormatting.Tests
                 actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
+            actualResult3 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1, arg2);
+            actualResult4 = StringFormatter.Format(format, arg0, arg1, arg2);
+
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         // do a formatting operation, comparing the results against classic String.Format
@@ -104,6 +126,8 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
             string? actualResult2 = null;
+            string? actualResult3 = null;
+            string? actualResult4 = null;
 
             int argLen = 3;
             if (args != null)
@@ -132,8 +156,13 @@ namespace FastFormatting.Tests
                 actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
+            actualResult3 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1, arg2, args);
+            actualResult4 = StringFormatter.Format(format, arg0, arg1, arg2, args);
+
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         // do a formatting operation, comparing the results against classic String.Format
@@ -142,6 +171,8 @@ namespace FastFormatting.Tests
             string? expectedResult = null;
             string? actualResult1 = null;
             string? actualResult2 = null;
+            string? actualResult3 = null;
+            string? actualResult4 = null;
 
             expectedResult = String.Format(format, args);
 
@@ -155,8 +186,13 @@ namespace FastFormatting.Tests
                 actualResult2 = s.Slice(0, charsWritten).ToString();
             }
 
+            actualResult3 = StringFormatter.Format(CultureInfo.CurrentCulture, format, args);
+            actualResult4 = StringFormatter.Format(format, args);
+
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private void CheckBadFormatString(string format)
