@@ -1,14 +1,11 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+using Xunit;
+using Xunit.Abstractions;
+
 namespace FastFormatting.Tests
 {
-    using Microsoft.Win32.SafeHandles;
-    using System;
-    using System.ComponentModel.DataAnnotations;
-    using Xunit;
-    using Xunit.Abstractions;
-    using Xunit.Sdk;
-
     public class MakerTests
     {
         private readonly ITestOutputHelper _output;

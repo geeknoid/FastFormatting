@@ -1,10 +1,10 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+using System.Collections.Concurrent;
+
 namespace FastFormatting
 {
-    using System;
-    using System.Collections.Concurrent;
-
     readonly partial struct StringFormatter
     {
         // TODO: Perhaps this number should be tunable by the user?

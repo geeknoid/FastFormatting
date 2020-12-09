@@ -1,11 +1,10 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+using System.Buffers;
+
 namespace FastFormatting
 {
-    using System;
-    using System.Buffers;
-    using System.ComponentModel;
-
     public ref partial struct StringMaker
     {
         public const int DefaultCapacity = 128;
@@ -139,11 +138,6 @@ namespace FastFormatting
 
         public void Append(ReadOnlySpan<char> value, int width)
         {
-            if (_length > _chars.Length - value.Length)
-            {
-                if (!Expand(value.Length)) return;
-            }
-
             if (width == 0)
             {
                 if (_length > _chars.Length - value.Length)

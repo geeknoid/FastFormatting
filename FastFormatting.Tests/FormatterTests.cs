@@ -1,13 +1,13 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+using System.Globalization;
+using System.Text;
+using Xunit;
+using Xunit.Abstractions;
+
 namespace FastFormatting.Tests
 {
-    using System;
-    using System.Globalization;
-    using System.Text;
-    using Xunit;
-    using Xunit.Abstractions;
-
     public class FormatterTests
     {
         private readonly ITestOutputHelper _output;

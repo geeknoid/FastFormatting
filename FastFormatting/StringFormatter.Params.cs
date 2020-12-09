@@ -1,9 +1,9 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+
 namespace FastFormatting
 {
-    using System;
-
     readonly partial struct StringFormatter
     {
         /// <summary>

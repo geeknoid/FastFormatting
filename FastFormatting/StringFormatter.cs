@@ -1,11 +1,11 @@
 // © Microsoft Corporation. All rights reserved.
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+
 namespace FastFormatting
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-
     /// <summary>
     /// Provides highly efficient string formatting functionality.
     /// </summary>
