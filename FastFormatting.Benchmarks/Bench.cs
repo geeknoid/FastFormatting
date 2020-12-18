@@ -24,7 +24,7 @@ namespace FastFormatting.Benchmarks
         public static readonly StringBuilder Builder = new StringBuilder(1024);
 
         [Benchmark]
-        public void TestClassicStringFormat()
+        public void ClassicStringFormat()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -33,7 +33,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestInterpolation()
+        public void Interpolation()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -42,7 +42,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestStringBuilder()
+        public void StringBuilder()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -53,7 +53,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestStringFormatter()
+        public void StringFormatter()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -62,7 +62,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestStringFormatterWithSpan()
+        public void StringFormatterWithSpan()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -71,7 +71,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestStringMaker()
+        public void StringMaker()
         {
             Span<char> span = stackalloc char[128];
             for (int i = 0; i < Iterations; i++)
@@ -87,7 +87,7 @@ namespace FastFormatting.Benchmarks
         }
 
         [Benchmark]
-        public void TestStringMakerWithSpan()
+        public void StringMakerWithSpan()
         {
             for (int i = 0; i < Iterations; i++)
             {
@@ -100,10 +100,7 @@ namespace FastFormatting.Benchmarks
                 _ = sm.ExtractSpan();
             }
         }
-    }
 
-    public class Program
-    {
         public static void Main(string[] args)
         {
             var summary = BenchmarkRunner.Run<Bench>();
