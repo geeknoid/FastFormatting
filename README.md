@@ -18,7 +18,7 @@ to format arguments by calling the `Format` method, which is about 2x as fast as
 You can also use the `TryFormat` method to format directly into your own span, which is 4x faster
 than `String.Format`.
 
-* 'StringFormatter` also includes static methods that provide a 1-1 replacement for String.Format,
+* `StringFormatter` also includes static methods that provide a 1-1 replacement for String.Format,
 but run 2x as fast. Just go through your code and replace all uses of `String.Format` with
 `StringFormatter.Format` and you're done: your code runs faster.
 
