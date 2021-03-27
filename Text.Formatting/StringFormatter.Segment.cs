@@ -1,13 +1,13 @@
-// © Microsoft Corporation. All rights reserved.
+// Â© Microsoft Corporation. All rights reserved.
 
-namespace FastFormatting
+namespace Text
 {
-    readonly partial struct StringFormatter
+    public readonly partial struct StringFormatter
     {
         /// <summary>
         /// A chunk of formatting information.
         /// </summary>
-        internal readonly struct Segment
+        private readonly struct Segment
         {
             public Segment(short literalCount, short argIndex, short argWidth, string argFormat)
             {
@@ -18,23 +18,23 @@ namespace FastFormatting
             }
 
             /// <summary>
-            /// The number of chars of literal text consumed by this segment.
+            /// Gets the number of chars of literal text consumed by this segment.
             /// </summary>
             public short LiteralCount { get; }
 
             /// <summary>
-            /// The index of the argument to be formatted, -1 to skip argument formatting.
+            /// Gets the index of the argument to be formatted, -1 to skip argument formatting.
             /// </summary>
             public short ArgIndex { get; }
 
             /// <summary>
-            /// The width of the formatted value in characters. If this is negative, it indicates to left-justify
+            /// Gets the width of the formatted value in characters. If this is negative, it indicates to left-justify
             /// and the field width is then the absolute value.
             /// </summary>
             public short ArgWidth { get; }
 
             /// <summary>
-            /// The custom format string to use when formatting the argument.
+            /// Gets the custom format string to use when formatting the argument.
             /// </summary>
             public string ArgFormat { get; }
         }

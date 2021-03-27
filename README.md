@@ -3,12 +3,6 @@
 This project is a proof-of-concept showing how to substantially improve string formatting performance in .NET.
 There are two new types to support faster formatting:
 
-* The `StringMaker` type is a supercharged version of the classic `StringBuilder` type. It
-is designed for efficiently building up a string or span by appending together bits and
-pieces. The implementation tries to avoid any memory allocations when it can, and if you
-supply your own span to the constructor, it can operate entirely without allocating memory.
-When used in this mode, total performance is around 9x faster than `StringBuilder`.
-
 * The `StringFormatter` type is built on top of `StringMaker` and is designed to support the
 normal .NET composite formatting model, such as you use with `String.Format`. The type splits
 the normal formatting step in two in order to boost performance of the formatting process. 
@@ -20,7 +14,16 @@ than `String.Format`.
 
 * `StringFormatter` also includes static methods that provide a 1-1 replacement for String.Format,
 but run 2x as fast. Just go through your code and replace all uses of `String.Format` with
-`StringFormatter.Format` and you're done: your code runs faster.
+`StringFormatter.Format` and you're done: your code runs faster. This set of functions is enabled
+by defining the STATIC_FORMAT compilation symbol.
+
+* The `StringMaker` type is a supercharged version of the classic `StringBuilder` type. It
+is designed for efficiently building up a string or span by appending together bits and
+pieces. The implementation tries to avoid any memory allocations when it can, and if you
+supply your own span to the constructor, it can operate entirely without allocating memory.
+When used in this mode, total performance is around 9x faster than `StringBuilder`. This type is 
+nominally internal, but can also be exposed publically by defining the PUBLIC_STRINGMAKER
+compilation symbol.
 
 Here's output from the benchmark:
 
@@ -38,9 +41,28 @@ Here's output from the benchmark:
 
 # Example
 
-```csharp
-// StringMaker
+Using `StringFormatter`
 
+```csharp
+private static readonly _sf = new StringFormatter("Hello {0}");
+
+public void Foo()
+{
+    var str3 = _sf.Format("World");
+    Console.WriteLine(str3);     // prints Hello World
+}
+```
+
+USing the optional static methods on `StringFormatter`:
+
+```csharp
+var str4 = StringFormatter.Format("Hello {0}", name);
+Console.WriteLine(str4);     // prints Hello World
+```
+
+Using `StringMaker` directly:
+
+```csharp
 var sm = new StringMaker();
 sm.Append("Hello ");
 sm.Append("World ");
@@ -55,15 +77,10 @@ sm.Append(42);
 var span = sm.ExtractSpan();
 var str2 = span.ToString();
 Console.WriteLine(str2);     // prints Hello World 42
-
-// Using a StringFormatter instance
-
-var sf = new StringFormatter("Hello {0}");
-var str3 = sf.Format(null, "World");
-Console.WriteLine(str3);     // prints Hello World
-
-// Using the StringFormatter static functions
-
-var str4 = StringFormatter.Format("Hello {0}", name);
-Console.WriteLine(str4);     // prints Hello World
 ```
+
+## Implementation Notes
+
+This has 100% unit test coverage. A special emphasis was made on
+maintaining 100% compatibility with classic .NET composite formatting
+semantics.
