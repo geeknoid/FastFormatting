@@ -4,6 +4,7 @@
 
 using System;
 using System.Buffers;
+using System.Text;
 
 namespace Text
 {
@@ -70,9 +71,14 @@ namespace Text
                 return ExtractString();
             }
 
-            var s = _chars.Slice(Length);
+            var s = _chars.Slice(0, Length);
             Dispose();
             return s;
+        }
+
+        internal void AppendTo(StringBuilder sb)
+        {
+            _ = sb.Append(_chars.Slice(0, Length));
         }
 
         public int Length { get; private set; }

@@ -1,43 +1,32 @@
-// © Microsoft Corporation. All rights reserved.
+// Â© Microsoft Corporation. All rights reserved.
 
-#if STATIC_FORMAT
 using System;
-using System.Collections.Concurrent;
-
-#pragma warning disable S3872 // Parameter names should not duplicate the names of their methods
-#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
+using System.Text;
 
 namespace Text
 {
-    public readonly partial struct StringFormatter
+    public static class StringBuilderExtensions
     {
-        private const int MaxCacheEntries = 128;
-
-        private static readonly ConcurrentDictionary<string, StringFormatter> _formatters = new ();
-
         /// <summary>
-        /// Formats a string with one argument.
+        /// Formats a string with a single argument.
         /// </summary>
         /// <typeparam name="T">Type of the single argument.</typeparam>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg">An argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T>(string format, T arg)
-        {
-            return GetFormatter(format).Format(null, arg);
-        }
+        public static StringBuilder AppendFormat<T>(this StringBuilder sb, CompositeFormat format, T arg) => AppendFormat<T>(sb, format, null, arg);
 
         /// <summary>
-        /// Formats a string with one argument.
+        /// Formats a string with a single argument.
         /// </summary>
         /// <typeparam name="T">Type of the single argument.</typeparam>
         /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg">An argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T>(IFormatProvider? provider, string format, T arg)
+        public static StringBuilder AppendFormat<T>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T arg)
         {
-            return GetFormatter(format).Format(provider, arg);
+            format.CheckNumArgs(1, null);
+            var pa = new Params<T, Nothing, Nothing>(arg, default, default);
+            return AppendFormat(sb, format, provider, in pa);
         }
 
         /// <summary>
@@ -45,14 +34,10 @@ namespace Text
         /// </summary>
         /// <typeparam name="T0">Type of the first argument.</typeparam>
         /// <typeparam name="T1">Type of the second argument.</typeparam>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1>(string format, T0 arg0, T1 arg1)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1);
-        }
+        public static StringBuilder AppendFormat<T0, T1>(this StringBuilder sb, CompositeFormat format, T0 arg0, T1 arg1) => AppendFormat<T0, T1>(sb, format, null, arg0, arg1);
 
         /// <summary>
         /// Formats a string with two arguments.
@@ -60,13 +45,14 @@ namespace Text
         /// <typeparam name="T0">Type of the first argument.</typeparam>
         /// <typeparam name="T1">Type of the second argument.</typeparam>
         /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1>(IFormatProvider? provider, string format, T0 arg0, T1 arg1)
+        public static StringBuilder AppendFormat<T0, T1>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T0 arg0, T1 arg1)
         {
-            return GetFormatter(format).Format(provider, arg0, arg1);
+            format.CheckNumArgs(2, null);
+            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default);
+            return AppendFormat(sb, format, provider, in pa);
         }
 
         /// <summary>
@@ -75,15 +61,11 @@ namespace Text
         /// <typeparam name="T0">Type of the first argument.</typeparam>
         /// <typeparam name="T1">Type of the second argument.</typeparam>
         /// <typeparam name="T2">Type of the third argument.</typeparam>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <param name="arg2">Third argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1, arg2);
-        }
+        public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format, T0 arg0, T1 arg1, T2 arg2) => AppendFormat<T0, T1, T2>(sb, format, null, arg0, arg1, arg2);
 
         /// <summary>
         /// Formats a string with three arguments.
@@ -92,14 +74,15 @@ namespace Text
         /// <typeparam name="T1">Type of the second argument.</typeparam>
         /// <typeparam name="T2">Type of the third argument.</typeparam>
         /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <param name="arg2">Third argument to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2)
+        public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format,IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
-            return GetFormatter(format).Format(provider, arg0, arg1, arg2);
+            format.CheckNumArgs(3, null);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
+            return AppendFormat(sb, format, provider, in pa);
         }
 
         /// <summary>
@@ -108,70 +91,74 @@ namespace Text
         /// <typeparam name="T0">Type of the first argument.</typeparam>
         /// <typeparam name="T1">Type of the second argument.</typeparam>
         /// <typeparam name="T2">Type of the third argument.</typeparam>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <param name="arg2">Third argument to use in the formatting operation.</param>
         /// <param name="args">Additional arguments to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
-        {
-            return GetFormatter(format).Format(null, arg0, arg1, arg2, args);
-        }
+        public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args) => AppendFormat<T0, T1, T2>(sb, format, null, arg0, arg1, arg2, args);
 
         /// <summary>
         /// Formats a string with arguments.
         /// </summary>
+        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
         /// <typeparam name="T0">Type of the first argument.</typeparam>
         /// <typeparam name="T1">Type of the second argument.</typeparam>
         /// <typeparam name="T2">Type of the third argument.</typeparam>
-        /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="arg0">First argument to use in the formatting operation.</param>
         /// <param name="arg1">Second argument to use in the formatting operation.</param>
         /// <param name="arg2">Third argument to use in the formatting operation.</param>
         /// <param name="args">Additional arguments to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format<T0, T1, T2>(IFormatProvider? provider, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
+        public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
-            return GetFormatter(format).Format(provider, arg0, arg1, arg2, args);
+            format.CheckNumArgs(3, args);
+            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
+            return AppendFormat(sb, format, provider, in pa);
         }
 
         /// <summary>
         /// Formats a string with arguments.
         /// </summary>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="args">Arguments to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format(string format, params object?[]? args)
-        {
-            return GetFormatter(format).Format(null, args);
-        }
+        public static StringBuilder AppendFormat(this StringBuilder sb, CompositeFormat format, params object?[]? args) => AppendFormat(sb, format, null, args);
 
         /// <summary>
         /// Formats a string with arguments.
         /// </summary>
         /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
-        /// <param name="format">A classic .NET format string as used with <see cref="string.Format(string,object?)"  />.</param>
         /// <param name="args">Arguments to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
-        public static string Format(IFormatProvider? provider, string format, params object?[]? args)
+        public static StringBuilder AppendFormat(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, params object?[]? args)
         {
-            return GetFormatter(format).Format(provider, args);
-        }
+            format.CheckNumArgs(0, args);
 
-        private static StringFormatter GetFormatter(string format)
-        {
-#pragma warning disable CPR123 // ConcurrentDictionary Count, ToArray(), CopyTo() and Clear() take locks and defeats the benefits of the concurrency.
-            if (_formatters.Count >= MaxCacheEntries)
-#pragma warning restore CPR123 // ConcurrentDictionary Count, ToArray(), CopyTo() and Clear() take locks and defeats the benefits of the concurrency.
+            if (format.NumArgumentsNeeded == 0)
             {
-                return new StringFormatter(format);
+                return sb.Append(format.LiteralString);
             }
 
-            return _formatters.GetOrAdd(format, key => new StringFormatter(format));
+            var pa = args!.Length switch
+            {
+                1 => new Params<object?, object?, object?>(args[0], null, null),
+                2 => new Params<object?, object?, object?>(args[0], args[1], null),
+                3 => new Params<object?, object?, object?>(args[0], args[1], args[2]),
+                _ => new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3))
+            };
+
+            return AppendFormat(sb, format, provider, in pa);
+        }
+
+        private static StringBuilder AppendFormat<T0, T1, T2>(StringBuilder sb, CompositeFormat format, IFormatProvider? provider, in Params<T0, T1, T2> pa)
+        {
+            var estimatedSize = format.EstimateResultSize(in pa);
+            var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
+            format.Format<T0, T1, T2>(ref sm, provider, in pa);
+            sm.AppendTo(sb);
+            sm.Dispose();
+
+            return sb;
         }
     }
 }
-
-#endif

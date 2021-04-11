@@ -3,19 +3,14 @@
 This project is a proof-of-concept showing how to substantially improve string formatting performance in .NET.
 There are two new types to support faster formatting:
 
-* The `StringFormatter` type is built on top of `StringMaker` and is designed to support the
+* The `CompositeFormat` type is built is designed to support the
 normal .NET composite formatting model, such as you use with `String.Format`. The type splits
 the normal formatting step in two in order to boost performance of the formatting process. 
 The first step is parsing the composite format string into an efficient form. This step is done
-by creating a `StringFormatter` instance. Once you have this instance, you can use it repeatedly
+by creating a `CompositeFormat` instance. Once you have this instance, you can use it repeatedly
 to format arguments by calling the `Format` method, which is about 2x as fast as `String.Format`.
 You can also use the `TryFormat` method to format directly into your own span, which is 4x faster
 than `String.Format`.
-
-* `StringFormatter` also includes static methods that provide a 1-1 replacement for String.Format,
-but run 2x as fast. Just go through your code and replace all uses of `String.Format` with
-`StringFormatter.Format` and you're done: your code runs faster. This set of functions is enabled
-by defining the STATIC_FORMAT compilation symbol.
 
 * The `StringMaker` type is a supercharged version of the classic `StringBuilder` type. It
 is designed for efficiently building up a string or span by appending together bits and
@@ -25,39 +20,42 @@ When used in this mode, total performance is around 9x faster than `StringBuilde
 nominally internal, but can also be exposed publically by defining the PUBLIC_STRINGMAKER
 compilation symbol.
 
+## Template-Based Format Strings
+
+The `LoggerMessage.Define` method in .NET supports template-based format strings,
+which use template names instead of argument indices in the format string. The
+`CompositeFormat` provides an overload which supports this use case. This overload
+returns the set of encountered template names.
+
+## Benchmark
+
 Here's output from the benchmark:
 
 ```
-|                      Method |      Mean |     Error |    StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
-|---------------------------- |----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
-|     TestClassicStringFormat | 44.866 ms | 0.8916 ms | 1.4897 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800539 B |
-|           TestInterpolation | 45.272 ms | 0.8490 ms | 1.5524 ms | 3000.0000 | 1250.0000 | 416.6667 | 16800515 B |
-|           TestStringBuilder | 49.877 ms | 0.9750 ms | 1.3016 ms | 2888.8889 | 1111.1111 | 333.3333 | 16800055 B |
-|         TestStringFormatter | 25.101 ms | 0.5015 ms | 0.9170 ms | 2187.5000 |  906.2500 | 281.2500 | 12000022 B |
-| TestStringFormatterWithSpan |  9.574 ms | 0.1785 ms | 0.1490 ms |         - |         - |        - |        4 B |
-|             TestStringMaker |  7.308 ms | 0.1203 ms | 0.1564 ms | 2859.3750 |         - |        - | 11999924 B |
-|     TestStringMakerWithSpan |  5.043 ms | 0.0988 ms | 0.1832 ms |         - |         - |        - |        2 B |
+|                  Method |      Mean |     Error |    StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
+|------------------------ |----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
+|     ClassicStringFormat | 45.036 ms | 26.859 ms | 1.4723 ms | 3083.3333 | 1333.3333 | 416.6667 | 16800613 B |
+|           Interpolation | 43.340 ms |  3.324 ms | 0.1822 ms | 3000.0000 | 1187.5000 | 312.5000 | 16799929 B |
+|           StringBuilder | 51.144 ms |  3.827 ms | 0.2098 ms | 2900.0000 | 1100.0000 | 200.0000 | 16799922 B |
+|         CompositeFormat | 26.178 ms | 16.042 ms | 0.8793 ms | 2062.5000 |  781.2500 | 156.2500 | 11999929 B |
+| CompositeFormatWithSpan | 10.382 ms |  1.172 ms | 0.0642 ms |         - |         - |        - |        2 B |
+|             StringMaker |  9.573 ms |  1.488 ms | 0.0816 ms | 5546.8750 |         - |        - | 23199601 B |
+|     StringMakerWithSpan |  8.550 ms |  6.963 ms | 0.3817 ms | 2671.8750 |         - |        - | 11199680 B |
+
 ```
 
-# Example
+## Example
 
-Using `StringFormatter`
+Using `CompositeFormat`
 
 ```csharp
-private static readonly _sf = new StringFormatter("Hello {0}");
+private static readonly _cf = new CompositeFormat("Hello {0}");
 
 public void Foo()
 {
-    var str3 = _sf.Format("World");
+    var str3 = _cf.Format("World");
     Console.WriteLine(str3);     // prints Hello World
 }
-```
-
-USing the optional static methods on `StringFormatter`:
-
-```csharp
-var str4 = StringFormatter.Format("Hello {0}", name);
-Console.WriteLine(str4);     // prints Hello World
 ```
 
 Using `StringMaker` directly:

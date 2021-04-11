@@ -8,82 +8,104 @@ using Xunit;
 #pragma warning disable S4056 // Overloads with a "CultureInfo" or an "IFormatProvider" parameter should be used
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
 
-#if !STATIC_FORMAT
 #pragma warning disable CA1801 // Review unused parameters
-#endif
 
 namespace Text.Formatting.Test
 {
-    public class FormatterTests
+    public class CompositeFormatTests
     {
         private static void CheckExpansion<T>(T arg)
         {
             var format = "{0,256} {1}";
 
             var expectedResult = string.Format(format, 3.14, arg);
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, 3.14, arg);
-            var actualResult2 = sf.Format(3.14, arg);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, 3.14, arg);
+            var actualResult2 = cf.Format(3.14, arg);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, 3.14, arg).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, 3.14, arg).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithString<T>(string? expectedResult, string format, T arg)
         {
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, arg);
-            var actualResult2 = sf.Format(arg);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, arg);
+            var actualResult2 = cf.Format(arg);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, arg).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, arg).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithString<T0, T1>(string? expectedResult, string format, T0 arg0, T1 arg1)
         {
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, arg0, arg1);
-            var actualResult2 = sf.Format(arg0, arg1);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, arg0, arg1);
+            var actualResult2 = cf.Format(arg0, arg1);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, arg0, arg1).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, arg0, arg1).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithString<T0, T1, T2>(string? expectedResult, string format, T0 arg0, T1 arg1, T2 arg2)
         {
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, arg0, arg1, arg2);
-            var actualResult2 = sf.Format(arg0, arg1, arg2);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, arg0, arg1, arg2);
+            var actualResult2 = cf.Format(arg0, arg1, arg2);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, arg0, arg1, arg2).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, arg0, arg1, arg2).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithString<T0, T1, T2>(string? expectedResult, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, arg0, arg1, arg2, args);
-            var actualResult2 = sf.Format(arg0, arg1, arg2, args);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, arg0, arg1, arg2, args);
+            var actualResult2 = cf.Format(arg0, arg1, arg2, args);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, arg0, arg1, arg2, args).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, arg0, arg1, arg2, args).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithString(string? expectedResult, string format, params object?[]? args)
         {
-            var sf = new StringFormatter(format);
-            var actualResult1 = sf.Format(null, args);
-            var actualResult2 = sf.Format(args);
+            var cf = new CompositeFormat(format);
+            var actualResult1 = cf.Format(null, args);
+            var actualResult2 = cf.Format(args);
+            var actualResult3 = new StringBuilder().AppendFormat(cf, null, args).ToString();
+            var actualResult4 = new StringBuilder().AppendFormat(cf, args).ToString();
 
             Assert.Equal(expectedResult, actualResult1);
             Assert.Equal(expectedResult, actualResult2);
+            Assert.Equal(expectedResult, actualResult3);
+            Assert.Equal(expectedResult, actualResult4);
         }
 
         private static void CheckFormatWithSpan<T>(string? expectedResult, string format, T arg)
         {
-            var sf = new StringFormatter(format);
+            var cf = new CompositeFormat(format);
             var s = new Span<char>(new char[(format.Length * 2) + 128]);
-            Assert.True(sf.TryFormat(s, out int charsWritten, null, arg));
+            Assert.True(cf.TryFormat(s, out int charsWritten, null, arg));
             var actualResult = s.Slice(0, charsWritten).ToString();
 
             Assert.Equal(expectedResult, actualResult);
@@ -91,9 +113,9 @@ namespace Text.Formatting.Test
 
         private static void CheckFormatWithSpan<T0, T1>(string? expectedResult, string format, T0 arg0, T1 arg1)
         {
-            var sf = new StringFormatter(format);
+            var cf = new CompositeFormat(format);
             var s = new Span<char>(new char[(format.Length * 2) + 128]);
-            Assert.True(sf.TryFormat(s, out int charsWritten, null, arg0, arg1));
+            Assert.True(cf.TryFormat(s, out int charsWritten, null, arg0, arg1));
             var actualResult = s.Slice(0, charsWritten).ToString();
 
             Assert.Equal(expectedResult, actualResult);
@@ -101,9 +123,9 @@ namespace Text.Formatting.Test
 
         private static void CheckFormatWithSpan<T0, T1, T2>(string? expectedResult, string format, T0 arg0, T1 arg1, T2 arg2)
         {
-            var sf = new StringFormatter(format);
+            var cf = new CompositeFormat(format);
             var s = new Span<char>(new char[(format.Length * 2) + 128]);
-            Assert.True(sf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2));
+            Assert.True(cf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2));
             var actualResult = s.Slice(0, charsWritten).ToString();
 
             Assert.Equal(expectedResult, actualResult);
@@ -111,9 +133,9 @@ namespace Text.Formatting.Test
 
         private static void CheckFormatWithSpan<T0, T1, T2>(string? expectedResult, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
-            var sf = new StringFormatter(format);
+            var cf = new CompositeFormat(format);
             var s = new Span<char>(new char[(format.Length * 2) + 128]);
-            Assert.True(sf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2, args));
+            Assert.True(cf.TryFormat(s, out int charsWritten, null, arg0, arg1, arg2, args));
             var actualResult = s.Slice(0, charsWritten).ToString();
 
             Assert.Equal(expectedResult, actualResult);
@@ -121,72 +143,12 @@ namespace Text.Formatting.Test
 
         private static void CheckFormatWithSpan(string? expectedResult, string format, params object?[]? args)
         {
-            var sf = new StringFormatter(format);
+            var cf = new CompositeFormat(format);
             var s = new Span<char>(new char[(format.Length * 2) + 128]);
-            Assert.True(sf.TryFormat(s, out int charsWritten, null, args));
+            Assert.True(cf.TryFormat(s, out int charsWritten, null, args));
             var actualResult = s.Slice(0, charsWritten).ToString();
 
             Assert.Equal(expectedResult, actualResult);
-        }
-
-        private static void CheckFormatWithStatic<T>(string? expectedResult, string format, T arg)
-        {
-            // optional feature
-#if STATIC_FORMAT
-            var actualResult1 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg);
-            var actualResult2 = StringFormatter.Format(format, arg);
-
-            Assert.Equal(expectedResult, actualResult1);
-            Assert.Equal(expectedResult, actualResult2);
-#endif
-        }
-
-        private static void CheckFormatWithStatic<T0, T1>(string? expectedResult, string format, T0 arg0, T1 arg1)
-        {
-            // optional feature
-#if STATIC_FORMAT
-            var actualResult1 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1);
-            var actualResult2 = StringFormatter.Format(format, arg0, arg1);
-
-            Assert.Equal(expectedResult, actualResult1);
-            Assert.Equal(expectedResult, actualResult2);
-#endif
-        }
-
-        private static void CheckFormatWithStatic<T0, T1, T2>(string expectedResult, string format, T0 arg0, T1 arg1, T2 arg2)
-        {
-            // optional feature
-#if STATIC_FORMAT
-            var actualResult1 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1, arg2);
-            var actualResult2 = StringFormatter.Format(format, arg0, arg1, arg2);
-
-            Assert.Equal(expectedResult, actualResult1);
-            Assert.Equal(expectedResult, actualResult2);
-#endif
-        }
-
-        private static void CheckFormatWithStatic<T0, T1, T2>(string? expectedResult, string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
-        {
-            // optional feature
-#if STATIC_FORMAT
-            var actualResult1 = StringFormatter.Format(CultureInfo.CurrentCulture, format, arg0, arg1, arg2, args);
-            var actualResult2 = StringFormatter.Format(format, arg0, arg1, arg2, args);
-
-            Assert.Equal(expectedResult, actualResult1);
-            Assert.Equal(expectedResult, actualResult2);
-#endif
-        }
-
-        private static void CheckFormatWithStatic(string? expectedResult, string format, params object?[]? args)
-        {
-            // optional feature
-#if STATIC_FORMAT
-            var actualResult1 = StringFormatter.Format(CultureInfo.CurrentCulture, format, args);
-            var actualResult2 = StringFormatter.Format(format, args);
-
-            Assert.Equal(expectedResult, actualResult1);
-            Assert.Equal(expectedResult, actualResult2);
-#endif
         }
 
         private static void CheckFormat<T>(string format, T arg)
@@ -194,7 +156,6 @@ namespace Text.Formatting.Test
             var expectedResult = string.Format(format, arg);
             CheckFormatWithString(expectedResult, format, arg);
             CheckFormatWithSpan(expectedResult, format, arg);
-            CheckFormatWithStatic(expectedResult, format, arg);
         }
 
         private static void CheckFormat<T0, T1>(string format, T0 arg0, T1 arg1)
@@ -202,7 +163,6 @@ namespace Text.Formatting.Test
             var expectedResult = string.Format(format, arg0, arg1);
             CheckFormatWithString(expectedResult, format, arg0, arg1);
             CheckFormatWithSpan(expectedResult, format, arg0, arg1);
-            CheckFormatWithStatic(expectedResult, format, arg0, arg1);
         }
 
         private static void CheckFormat<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2)
@@ -210,7 +170,6 @@ namespace Text.Formatting.Test
             var expectedResult = string.Format(format, arg0, arg1, arg2);
             CheckFormatWithString(expectedResult, format, arg0, arg1, arg2);
             CheckFormatWithSpan(expectedResult, format, arg0, arg1, arg2);
-            CheckFormatWithStatic(expectedResult, format, arg0, arg1, arg2);
         }
 
         private static void CheckFormat<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
@@ -228,7 +187,6 @@ namespace Text.Formatting.Test
             var expectedResult = string.Format(format, a);
             CheckFormatWithString(expectedResult, format, arg0, arg1, arg2, args);
             CheckFormatWithSpan(expectedResult, format, arg0, arg1, arg2, args);
-            CheckFormatWithStatic(expectedResult, format, arg0, arg1, arg2, args);
         }
 
         private static void CheckFormat(string format, params object?[] args)
@@ -236,7 +194,6 @@ namespace Text.Formatting.Test
             var expectedResult = string.Format(format, args);
             CheckFormatWithString(expectedResult, format, args);
             CheckFormatWithSpan(expectedResult, format, args);
-            CheckFormatWithStatic(expectedResult, format, args);
         }
 
         [Theory]
@@ -378,7 +335,7 @@ namespace Text.Formatting.Test
         public void BadFormatString(string format)
         {
             Assert.Throws<FormatException>(() => _ = string.Format(format, 1, 2, 3, 4, 5, 6, 7));
-            Assert.Throws<ArgumentException>(() => _ = new StringFormatter(format));
+            Assert.Throws<ArgumentException>(() => _ = new CompositeFormat(format));
         }
 
         [Theory]
@@ -416,10 +373,10 @@ namespace Text.Formatting.Test
         [Fact]
         public void BadNumArgs()
         {
-            var sf = new StringFormatter("{0} {2}");
+            var cf = new CompositeFormat("{0} {2}");
 
-            Assert.Throws<ArgumentException>(() => sf.Format((object?[])null!));
-            Assert.Throws<ArgumentException>(() => sf.Format(null, 1, 2, 3, 4));
+            Assert.Throws<ArgumentException>(() => cf.Format((object?[])null!));
+            Assert.Throws<ArgumentException>(() => cf.Format(null, 1, 2, 3, 4));
         }
 
         private struct Custom1 : IFormattable
@@ -869,35 +826,36 @@ namespace Text.Formatting.Test
         [InlineData("{0,3:d}{9}", 10)]
         public void TestNumArgsNeeded(string format, int argsExpected)
         {
-            var sf = new StringFormatter(format);
-            Assert.Equal(argsExpected, sf.NumArgumentsNeeded);
+            var cf = new CompositeFormat(format);
+            Assert.Equal(argsExpected, cf.NumArgumentsNeeded);
         }
 
         [Fact]
         public void OverflowNoArgs()
         {
-            var sf = new StringFormatter("0123");
-            Assert.False(sf.TryFormat(new char[3], out var charsWritten, null, null));
+            var cf = new CompositeFormat("0123");
+            Assert.False(cf.TryFormat(new char[3], out var charsWritten, null, null));
             Assert.Equal(0, charsWritten);
 
-            Assert.True(sf.TryFormat(new char[4], out charsWritten, null, null));
+            Assert.True(cf.TryFormat(new char[4], out charsWritten, null, null));
             Assert.Equal(4, charsWritten);
         }
 
-#if STATIC_FORMAT
         [Fact]
-        public void LotsOfFormatting()
+        public void TemplateFormat()
         {
-            for (int i = 0; i < 256; i++)
-            {
-                var fmt = $"{{0,{i}}}";
+            var cf = new CompositeFormat("{one} {two} {three} {one}", out var templates);
+            Assert.Equal(3, templates.Count);
+            Assert.Equal("one", templates[0]);
+            Assert.Equal("two", templates[1]);
+            Assert.Equal("three", templates[2]);
+            Assert.Equal(3, cf.NumArgumentsNeeded);
+            Assert.Equal("ONE TWO THREE ONE", cf.Format("ONE", "TWO", "THREE"));
 
-                var expected = string.Format(fmt, i);
-                var actual = StringFormatter.Format(fmt, i);
-
-                Assert.Equal(expected, actual);
-            }
+            Assert.Throws<ArgumentException>(() => new CompositeFormat("{", out templates));
+            Assert.Throws<ArgumentException>(() => new CompositeFormat("{@", out templates));
+            Assert.Throws<ArgumentException>(() => new CompositeFormat("{a", out templates));
+            Assert.Throws<ArgumentException>(() => new CompositeFormat("{_", out templates));
         }
-#endif
     }
 }

@@ -21,11 +21,11 @@ namespace Text.Formatting.Bench
         private const int _fourtyTwo = 42;
         private const string _hello = "Hello";
 
-        private static readonly StringFormatter _sf = new ("{0} Some literal portion in the middle {1} {2}");
+        private static readonly CompositeFormat _cf = new ("{0} Some literal portion in the middle {1} {2}");
         private static readonly string[] ClassicStringFormatResults = new string[_iterations];
         private static readonly string[] InterpolationResults = new string[_iterations];
-        private static readonly string[] StringFormatterResults = new string[_iterations];
-        private static readonly char[] StringFormatterWithSpanResults = new char[1024];
+        private static readonly string[] CompositeFormatResults = new string[_iterations];
+        private static readonly char[] CompositeFormatWithSpanResults = new char[1024];
         private static readonly string[] StringBuilderResults = new string[_iterations];
         private static readonly char[] StringMakerBuffer = new char[1024];
         private static readonly StringBuilder Builder = new StringBuilder(1024);
@@ -69,20 +69,20 @@ namespace Text.Formatting.Bench
         }
 
         [Benchmark]
-        public void StringFormatter()
+        public void CompositeFormat()
         {
             for (int i = 0; i < _iterations; i++)
             {
-                StringFormatterResults[i] = _sf.Format(null, _hello, _fourtyTwo, i);
+                CompositeFormatResults[i] = _cf.Format(null, _hello, _fourtyTwo, i);
             }
         }
 
         [Benchmark]
-        public void StringFormatterWithSpan()
+        public void CompositeFormatWithSpan()
         {
             for (int i = 0; i < _iterations; i++)
             {
-                _ = _sf.TryFormat(StringFormatterWithSpanResults.AsSpan(), out int charsWritten, null, _hello, _fourtyTwo, i);
+                _ = _cf.TryFormat(CompositeFormatWithSpanResults.AsSpan(), out int charsWritten, null, _hello, _fourtyTwo, i);
             }
         }
 
