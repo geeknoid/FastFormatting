@@ -34,13 +34,13 @@ Here's output from the benchmark:
 ```
 |                  Method |      Mean |     Error |    StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
 |------------------------ |----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
-|     ClassicStringFormat | 45.036 ms | 26.859 ms | 1.4723 ms | 3083.3333 | 1333.3333 | 416.6667 | 16800613 B |
-|           Interpolation | 43.340 ms |  3.324 ms | 0.1822 ms | 3000.0000 | 1187.5000 | 312.5000 | 16799929 B |
-|           StringBuilder | 51.144 ms |  3.827 ms | 0.2098 ms | 2900.0000 | 1100.0000 | 200.0000 | 16799922 B |
-|         CompositeFormat | 26.178 ms | 16.042 ms | 0.8793 ms | 2062.5000 |  781.2500 | 156.2500 | 11999929 B |
-| CompositeFormatWithSpan | 10.382 ms |  1.172 ms | 0.0642 ms |         - |         - |        - |        2 B |
-|             StringMaker |  9.573 ms |  1.488 ms | 0.0816 ms | 5546.8750 |         - |        - | 23199601 B |
-|     StringMakerWithSpan |  8.550 ms |  6.963 ms | 0.3817 ms | 2671.8750 |         - |        - | 11199680 B |
+|     ClassicStringFormat | 46.075 ms | 2.1046 ms | 3.0849 ms | 3000.0000 | 1272.7273 | 363.6364 | 16799928 B |
+|           Interpolation | 46.858 ms | 1.7064 ms | 2.3921 ms | 3000.0000 | 1187.5000 | 312.5000 | 16799924 B |
+|           StringBuilder | 52.890 ms | 1.4441 ms | 2.1167 ms | 2900.0000 | 1100.0000 | 200.0000 | 16799926 B |
+|         CompositeFormat | 22.959 ms | 0.4265 ms | 0.6384 ms | 2062.5000 |  781.2500 | 156.2500 | 11999928 B |
+| CompositeFormatWithSpan |  8.770 ms | 0.0831 ms | 0.1218 ms |         - |         - |        - |          - |
+|             StringMaker | 10.497 ms | 0.4242 ms | 0.5947 ms | 5546.8750 |         - |        - | 23199600 B |
+|     StringMakerWithSpan |  9.232 ms | 0.1310 ms | 0.1837 ms | 2671.8750 |         - |        - | 11199680 B |
 
 ```
 

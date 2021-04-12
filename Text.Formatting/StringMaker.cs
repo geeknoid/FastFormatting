@@ -148,7 +148,6 @@ namespace Text
             }
         }
 
-#if PUBLIC_STRINGMAKER
         public void Append(ReadOnlySpan<char> value)
         {
             if (Length > _chars.Length - value.Length)
@@ -162,7 +161,6 @@ namespace Text
             value.CopyTo(_chars.Slice(Length));
             Length += value.Length;
         }
-#endif
 
         public void Append(ReadOnlySpan<char> value, int width)
         {

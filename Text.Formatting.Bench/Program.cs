@@ -34,7 +34,7 @@ namespace Text.Formatting.Bench
         {
             var dontRequireSlnToRunBenchmarks = ManualConfig
                 .Create(DefaultConfig.Instance)
-                .AddJob(Job.ShortRun.WithToolchain(InProcessEmitToolchain.Instance));
+                .AddJob(Job.MediumRun.WithToolchain(InProcessEmitToolchain.Instance));
 
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, dontRequireSlnToRunBenchmarks);
         }

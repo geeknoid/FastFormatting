@@ -419,7 +419,7 @@ namespace Text
                 if (literalCount > 0)
                 {
                     // the segment has some literal text
-                    sm.Append(LiteralString.AsSpan(literalIndex, literalCount), 0);
+                    sm.Append(LiteralString.AsSpan(literalIndex, literalCount));
                     literalIndex += literalCount;
                 }
 
@@ -430,26 +430,26 @@ namespace Text
                     switch (argIndex)
                     {
                         case 0:
-                            AppendArg(ref sm, pa.Arg0, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(ref sm, pa.Arg0, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         case 1:
-                            AppendArg(ref sm, pa.Arg1, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(ref sm, pa.Arg1, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         case 2:
-                            AppendArg(ref sm, pa.Arg2, segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(ref sm, pa.Arg2, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         default:
-                            AppendReferenceArg(ref sm, pa.Args[argIndex - 3], segment.ArgFormat, segment.ArgWidth, provider);
+                            AppendArg(ref sm, pa.Args[argIndex - 3], segment.ArgFormat, provider, segment.ArgWidth);
                             break;
                     }
                 }
             }
         }
 
-        private static void AppendArg<T>(ref StringMaker sm, T arg, string argFormat, int argWidth, IFormatProvider? provider)
+        private static void AppendArg<T>(ref StringMaker sm, T arg, string argFormat, IFormatProvider? provider, int argWidth)
         {
             switch (arg)
             {
@@ -459,6 +459,10 @@ namespace Text
 
                 case long a:
                     sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case string a:
+                    sm.Append(a, argWidth);
                     break;
 
                 case double a:
@@ -511,20 +515,6 @@ namespace Text
 
                 case TimeSpan a:
                     sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                default:
-                    AppendReferenceArg(ref sm, arg, argFormat, argWidth, provider);
-                    break;
-            }
-        }
-
-        private static void AppendReferenceArg(ref StringMaker sm, object? arg, string argFormat, int argWidth, IFormatProvider? provider)
-        {
-            switch (arg)
-            {
-                case string a:
-                    sm.Append(a, argWidth);
                     break;
 
                 case ISpanFormattable a:
