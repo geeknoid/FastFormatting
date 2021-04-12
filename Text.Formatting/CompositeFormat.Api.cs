@@ -26,8 +26,10 @@ namespace Text
         public string Format<T>(IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new Params<T, Nothing, Nothing>(arg, default, default);
-            return Format(provider, in pa);
+            var estimatedSize = LiteralString.Length + EstimateArgSize(arg);
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
+            Format<T, object?, object?>(ref sm, provider, arg, null, null, Array.Empty<object>());
+            return sm.ExtractString();
         }
 
         /// <summary>
@@ -52,8 +54,10 @@ namespace Text
         public string Format<T0, T1>(IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default);
-            return Format(provider, in pa);
+            var estimatedSize = LiteralString.Length + EstimateArgSize(arg0) + EstimateArgSize(arg1);
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
+            Format<T0, T1, object?>(ref sm, provider, arg0, arg1, null, Array.Empty<object>());
+            return sm.ExtractString();
         }
 
         /// <summary>
@@ -82,8 +86,10 @@ namespace Text
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
-            return Format(provider, in pa);
+            var estimatedSize = LiteralString.Length + EstimateArgSize(arg0) + EstimateArgSize(arg1) + EstimateArgSize(arg2);
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
+            Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, Array.Empty<object>());
+            return sm.ExtractString();
         }
 
         /// <summary>
@@ -114,8 +120,10 @@ namespace Text
         public string Format<T0, T1, T2>(IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             CheckNumArgs(3, args);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
-            return Format(provider, in pa);
+            var estimatedSize = LiteralString.Length + EstimateArgSize(arg0) + EstimateArgSize(arg1) + EstimateArgSize(arg2) + EstimateArgSize(args);
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
+            Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, args);
+            return sm.ExtractString();
         }
 
         /// <summary>
@@ -140,15 +148,29 @@ namespace Text
                 return LiteralString;
             }
 
-            var pa = args!.Length switch
-            {
-                1 => new Params<object?, object?, object?>(args[0], null, null),
-                2 => new Params<object?, object?, object?>(args[0], args[1], null),
-                3 => new Params<object?, object?, object?>(args[0], args[1], args[2]),
-                _ => new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3))
-            };
+            var estimatedSize = LiteralString.Length + EstimateArgSize(args);
+            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
 
-            return Format(provider, in pa);
+            switch (args!.Length)
+            {
+                case 1:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], null, null, Array.Empty<object>());
+                    break;
+
+                case 2:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], null, Array.Empty<object>());
+                    break;
+
+                case 3:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], Array.Empty<object>());
+                    break;
+
+                default:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], args.AsSpan(3));
+                    break;
+            }
+
+            return sm.ExtractString();
         }
 
         /// <summary>
@@ -163,8 +185,12 @@ namespace Text
         public bool TryFormat<T>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T arg)
         {
             CheckNumArgs(1, null);
-            var pa = new Params<T, Nothing, Nothing>(arg, default, default);
-            return TryFormat(destination, out charsWritten, provider, in pa);
+            var sm = new StringMaker(destination, true);
+            Format<T, object?, object?>(ref sm, provider, arg, null, null, Array.Empty<object>());
+            charsWritten = sm.Length;
+            var overflowed = sm.Overflowed;
+            sm.Dispose();
+            return !overflowed;
         }
 
         /// <summary>
@@ -181,8 +207,12 @@ namespace Text
         public bool TryFormat<T0, T1>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             CheckNumArgs(2, null);
-            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default);
-            return TryFormat(destination, out charsWritten, provider, in pa);
+            var sm = new StringMaker(destination, true);
+            Format<T0, T1, object?>(ref sm, provider, arg0, arg1, null, Array.Empty<object>());
+            charsWritten = sm.Length;
+            var overflowed = sm.Overflowed;
+            sm.Dispose();
+            return !overflowed;
         }
 
         /// <summary>
@@ -201,8 +231,12 @@ namespace Text
         public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             CheckNumArgs(3, null);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
-            return TryFormat(destination, out charsWritten, provider, in pa);
+            var sm = new StringMaker(destination, true);
+            Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, Array.Empty<object>());
+            charsWritten = sm.Length;
+            var overflowed = sm.Overflowed;
+            sm.Dispose();
+            return !overflowed;
         }
 
         /// <summary>
@@ -222,8 +256,12 @@ namespace Text
         public bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             CheckNumArgs(3, args);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
-            return TryFormat(destination, out charsWritten, provider, in pa);
+            var sm = new StringMaker(destination, true);
+            Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, args);
+            charsWritten = sm.Length;
+            var overflowed = sm.Overflowed;
+            sm.Dispose();
+            return !overflowed;
         }
 
         /// <summary>
@@ -251,31 +289,26 @@ namespace Text
                 return true;
             }
 
-            var pa = args!.Length switch
-            {
-                1 => new Params<object?, object?, object?>(args[0], null, null),
-                2 => new Params<object?, object?, object?>(args[0], args[1], null),
-                3 => new Params<object?, object?, object?>(args[0], args[1], args[2]),
-                _ => new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3))
-            };
-
-            return TryFormat(destination, out charsWritten, provider, in pa);
-        }
-
-        private string Format<T0, T1, T2>(IFormatProvider? provider, in Params<T0, T1, T2> pa)
-        {
-            var estimatedSize = EstimateResultSize(in pa);
-            var sm = (estimatedSize >= MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[MaxStackAlloc]);
-            Format<T0, T1, T2>(ref sm, provider, in pa);
-            var result = sm.ExtractString();
-            sm.Dispose();
-            return result;
-        }
-
-        private bool TryFormat<T0, T1, T2>(Span<char> destination, out int charsWritten, IFormatProvider? provider, in Params<T0, T1, T2> pa)
-        {
             var sm = new StringMaker(destination, true);
-            Format<T0, T1, T2>(ref sm, provider, in pa);
+            switch (args!.Length)
+            {
+                case 1:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], null, null, Array.Empty<object>());
+                    break;
+
+                case 2:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], null, Array.Empty<object>());
+                    break;
+
+                case 3:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], Array.Empty<object>());
+                    break;
+
+                default:
+                    Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], args.AsSpan(3));
+                    break;
+            }
+
             charsWritten = sm.Length;
             var overflowed = sm.Overflowed;
             sm.Dispose();

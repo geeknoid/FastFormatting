@@ -25,8 +25,13 @@ namespace Text
         public static StringBuilder AppendFormat<T>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T arg)
         {
             format.CheckNumArgs(1, null);
-            var pa = new Params<T, Nothing, Nothing>(arg, default, default);
-            return AppendFormat(sb, format, provider, in pa);
+            var estimatedSize = format.LiteralString.Length
+                + CompositeFormat.EstimateArgSize(arg);
+            var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
+            format.Format<T, object?, object?>(ref sm, provider, arg, null, null, Array.Empty<object>());
+            sm.AppendTo(sb);
+            sm.Dispose();
+            return sb;
         }
 
         /// <summary>
@@ -51,8 +56,14 @@ namespace Text
         public static StringBuilder AppendFormat<T0, T1>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T0 arg0, T1 arg1)
         {
             format.CheckNumArgs(2, null);
-            var pa = new Params<T0, T1, Nothing>(arg0, arg1, default);
-            return AppendFormat(sb, format, provider, in pa);
+            var estimatedSize = format.LiteralString.Length
+                + CompositeFormat.EstimateArgSize(arg0)
+                + CompositeFormat.EstimateArgSize(arg1);
+            var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
+            format.Format<T0, T1, object?>(ref sm, provider, arg0, arg1, null, Array.Empty<object>());
+            sm.AppendTo(sb);
+            sm.Dispose();
+            return sb;
         }
 
         /// <summary>
@@ -81,8 +92,15 @@ namespace Text
         public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format,IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2)
         {
             format.CheckNumArgs(3, null);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2);
-            return AppendFormat(sb, format, provider, in pa);
+            var estimatedSize = format.LiteralString.Length
+                + CompositeFormat.EstimateArgSize(arg0)
+                + CompositeFormat.EstimateArgSize(arg1)
+                + CompositeFormat.EstimateArgSize(arg2);
+            var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
+            format.Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, Array.Empty<object>());
+            sm.AppendTo(sb);
+            sm.Dispose();
+            return sb;
         }
 
         /// <summary>
@@ -113,8 +131,16 @@ namespace Text
         public static StringBuilder AppendFormat<T0, T1, T2>(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, params object?[]? args)
         {
             format.CheckNumArgs(3, args);
-            var pa = new Params<T0, T1, T2>(arg0, arg1, arg2, args);
-            return AppendFormat(sb, format, provider, in pa);
+            var estimatedSize = format.LiteralString.Length
+                + CompositeFormat.EstimateArgSize(arg0)
+                + CompositeFormat.EstimateArgSize(arg1)
+                + CompositeFormat.EstimateArgSize(arg2)
+                + CompositeFormat.EstimateArgSize(args);
+            var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
+            format.Format<T0, T1, T2>(ref sm, provider, arg0, arg1, arg2, args);
+            sm.AppendTo(sb);
+            sm.Dispose();
+            return sb;
         }
 
         /// <summary>
@@ -130,6 +156,9 @@ namespace Text
         /// <param name="provider">An optional format provider that provides formatting functionality for individual arguments.</param>
         /// <param name="args">Arguments to use in the formatting operation.</param>
         /// <returns>The formatted string.</returns>
+#if !NETSTANDARD2_1
+        [SkipLocalsInit]
+#endif
         public static StringBuilder AppendFormat(this StringBuilder sb, CompositeFormat format, IFormatProvider? provider, params object?[]? args)
         {
             format.CheckNumArgs(0, args);
@@ -139,25 +168,30 @@ namespace Text
                 return sb.Append(format.LiteralString);
             }
 
-            var pa = args!.Length switch
-            {
-                1 => new Params<object?, object?, object?>(args[0], null, null),
-                2 => new Params<object?, object?, object?>(args[0], args[1], null),
-                3 => new Params<object?, object?, object?>(args[0], args[1], args[2]),
-                _ => new Params<object?, object?, object?>(args[0], args[1], args[2], args.AsSpan(3))
-            };
-
-            return AppendFormat(sb, format, provider, in pa);
-        }
-
-        private static StringBuilder AppendFormat<T0, T1, T2>(StringBuilder sb, CompositeFormat format, IFormatProvider? provider, in Params<T0, T1, T2> pa)
-        {
-            var estimatedSize = format.EstimateResultSize(in pa);
+            var estimatedSize = CompositeFormat.EstimateArgSize(args);
             var sm = (estimatedSize >= CompositeFormat.MaxStackAlloc) ? new StringMaker(estimatedSize) : new StringMaker(stackalloc char[CompositeFormat.MaxStackAlloc]);
-            format.Format<T0, T1, T2>(ref sm, provider, in pa);
+
+            switch (args!.Length)
+            {
+                case 1:
+                    format.Format<object?, object?, object?>(ref sm, provider, args[0], null, null, Array.Empty<object>());
+                    break;
+
+                case 2:
+                    format.Format<object?, object?, object?>(ref sm, provider, args[0], args[1], null, Array.Empty<object>());
+                    break;
+
+                case 3:
+                    format.Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], Array.Empty<object>());
+                    break;
+
+                default:
+                    format.Format<object?, object?, object?>(ref sm, provider, args[0], args[1], args[2], args.AsSpan(3));
+                    break;
+            }
+
             sm.AppendTo(sb);
             sm.Dispose();
-
             return sb;
         }
     }

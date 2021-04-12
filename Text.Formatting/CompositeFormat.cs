@@ -345,6 +345,35 @@ namespace Text
             }
         }
 
+        internal static int EstimateArgSize<T>(T arg)
+        {
+            var str = arg as string;
+            if (str != null)
+            {
+                return str.Length;
+            }
+
+            return 8;
+        }
+
+        internal static int EstimateArgSize(object?[]? args)
+        {
+            int total = 0;
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    if (arg is string str)
+                    {
+                        total += str.Length;
+                    }
+                }
+            }
+
+            return total;
+        }
+
         internal void CheckNumArgs(int explicitCount, object?[]? args)
         {
             var total = explicitCount;
@@ -359,58 +388,12 @@ namespace Text
             }
         }
 
-        internal int EstimateResultSize<T0, T1, T2>(in Params<T0, T1, T2> pa)
-        {
-            // make a guesstimate at the size of the buffer we need for output
-            var estimatedSize = LiteralString.Length + (NumArgumentsNeeded * 16);
-
-            if (typeof(T0) == typeof(string))
-            {
-                var str = pa.Arg0 as string;
-                if (str != null)
-                {
-                    estimatedSize += str.Length;
-                }
-            }
-
-            if (typeof(T1) == typeof(string))
-            {
-                var str = pa.Arg1 as string;
-                if (str != null)
-                {
-                    estimatedSize += str.Length;
-                }
-            }
-
-            if (typeof(T2) == typeof(string))
-            {
-                var str = pa.Arg2 as string;
-                if (str != null)
-                {
-                    estimatedSize += str.Length;
-                }
-            }
-
-            foreach (var arg in pa.Args)
-            {
-                if (arg is string str)
-                {
-                    estimatedSize += str.Length;
-                }
-            }
-
-            return estimatedSize;
-        }
-
         // This is the workhorse formatting function, everything else is just a wrapper on top of this.
         //
         // Given this has 3 generics, it can lead to a lot of jitted code. We thus keep
         // the work done in here to a strict minimum, and dispatch to lower-arity methods
         // ASAP.
-        //
-        // This code assumes there are sufficient arguments in the ParamsArray to satisfy the needs
-        // of the format operation, so the upstream callers should validate this a priori.
-        internal void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, in Params<T0, T1, T2> pa)
+        internal void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, ReadOnlySpan<object?> args)
         {
             var literalIndex = 0;
             foreach (var segment in _segments)
@@ -430,19 +413,19 @@ namespace Text
                     switch (argIndex)
                     {
                         case 0:
-                            AppendArg(ref sm, pa.Arg0, segment.ArgFormat, provider, segment.ArgWidth);
+                            AppendArg(ref sm, arg0, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         case 1:
-                            AppendArg(ref sm, pa.Arg1, segment.ArgFormat, provider, segment.ArgWidth);
+                            AppendArg(ref sm, arg1, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         case 2:
-                            AppendArg(ref sm, pa.Arg2, segment.ArgFormat, provider, segment.ArgWidth);
+                            AppendArg(ref sm, arg2, segment.ArgFormat, provider, segment.ArgWidth);
                             break;
 
                         default:
-                            AppendArg(ref sm, pa.Args[argIndex - 3], segment.ArgFormat, provider, segment.ArgWidth);
+                            AppendArg(ref sm, args[argIndex - 3], segment.ArgFormat, provider, segment.ArgWidth);
                             break;
                     }
                 }
