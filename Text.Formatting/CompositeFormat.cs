@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 [assembly: InternalsVisibleTo("Text.Formatting.Test")]
 [assembly: InternalsVisibleTo("Text.Formatting.Bench")]
@@ -388,12 +389,7 @@ namespace Text
             }
         }
 
-        // This is the workhorse formatting function, everything else is just a wrapper on top of this.
-        //
-        // Given this has 3 generics, it can lead to a lot of jitted code. We thus keep
-        // the work done in here to a strict minimum, and dispatch to lower-arity methods
-        // ASAP.
-        internal void Format<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, ReadOnlySpan<object?> args)
+        private void CoreFmt<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, ReadOnlySpan<object?> args)
         {
             var literalIndex = 0;
             foreach (var segment in _segments)
@@ -541,6 +537,6 @@ namespace Text
         /// In the case where the format string doesn't contain any formatting
         /// sequence, this literal is the string to produce when formatting.
         /// </remarks>
-        internal readonly string LiteralString { get; }
+        private readonly string LiteralString { get; }
     }
 }

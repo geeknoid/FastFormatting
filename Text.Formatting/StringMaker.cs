@@ -57,29 +57,9 @@ namespace Text
             this = default;
         }
 
-        public string ExtractString()
-        {
-            var s = _chars.Slice(0, Length).ToString();
-            Dispose();
-            return s;
-        }
-
-        public ReadOnlySpan<char> ExtractSpan()
-        {
-            if (_rentedBuffer != null)
-            {
-                return ExtractString();
-            }
-
-            var s = _chars.Slice(0, Length);
-            Dispose();
-            return s;
-        }
-
-        internal void AppendTo(StringBuilder sb)
-        {
-            _ = sb.Append(_chars.Slice(0, Length));
-        }
+        public string ExtractString() => _chars.Slice(0, Length).ToString();
+        public ReadOnlySpan<char> ExtractSpan() => _chars.Slice(0, Length);
+        internal void AppendTo(StringBuilder sb) => _ = sb.Append(_chars.Slice(0, Length));
 
         public int Length { get; private set; }
         public bool Overflowed { get; private set; }

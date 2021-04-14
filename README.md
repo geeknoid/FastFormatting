@@ -32,26 +32,15 @@ returns the set of encountered template names.
 Here's output from the benchmark:
 
 ```
-|                  Method |      Mean |     Error |    StdDev |    Median |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
-|------------------------ |----------:|----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
-|     ClassicStringFormat | 47.173 ms | 2.2240 ms | 3.1897 ms | 46.384 ms | 3062.5000 | 1250.0000 | 375.0000 | 16799928 B |
-|           Interpolation | 46.869 ms | 1.4306 ms | 2.0055 ms | 46.411 ms | 3000.0000 | 1187.5000 | 312.5000 | 16799922 B |
-|           StringBuilder | 54.672 ms | 1.8148 ms | 2.6601 ms | 54.662 ms | 2900.0000 | 1100.0000 | 200.0000 | 16799926 B |
-|         CompositeFormat | 23.945 ms | 0.8072 ms | 1.1832 ms | 23.524 ms | 2062.5000 |  781.2500 | 156.2500 | 11999928 B |
-| CompositeFormatWithSpan |  9.108 ms | 0.1767 ms | 0.2535 ms |  9.266 ms |         - |         - |        - |          - |
-|             StringMaker | 10.838 ms | 0.1565 ms | 0.2245 ms | 10.870 ms | 5546.8750 |         - |        - | 23199600 B |
-|     StringMakerWithSpan |  9.765 ms | 0.7863 ms | 1.1525 ms |  9.339 ms | 2671.8750 |         - |        - | 11199680 B |
-
-
 |                  Method |      Mean |     Error |    StdDev |     Gen 0 |     Gen 1 |    Gen 2 |  Allocated |
 |------------------------ |----------:|----------:|----------:|----------:|----------:|---------:|-----------:|
-|     ClassicStringFormat | 49.072 ms | 2.2634 ms | 3.2462 ms | 3000.0000 | 1272.7273 | 363.6364 | 16799932 B |
-|           Interpolation | 47.692 ms | 1.7778 ms | 2.5497 ms | 3000.0000 | 1250.0000 | 333.3333 | 16799923 B |
-|           StringBuilder | 52.195 ms | 1.1695 ms | 1.5612 ms | 2900.0000 | 1100.0000 | 200.0000 | 16799926 B |
-|         CompositeFormat | 23.235 ms | 0.5558 ms | 0.8146 ms | 2062.5000 |  781.2500 | 156.2500 | 11999924 B |
-| CompositeFormatWithSpan |  9.466 ms | 0.1601 ms | 0.2346 ms |         - |         - |        - |          - |
-|             StringMaker | 11.287 ms | 0.0798 ms | 0.1093 ms | 5546.8750 |         - |        - | 23199600 B |
-|     StringMakerWithSpan |  9.420 ms | 0.0570 ms | 0.0835 ms | 2671.8750 |         - |        - | 11199680 B |
+|     ClassicStringFormat | 44.540 ms | 1.9369 ms | 2.8990 ms | 3062.5000 | 1250.0000 | 375.0000 | 16799923 B |
+|           Interpolation | 45.067 ms | 1.6723 ms | 2.3983 ms | 3000.0000 | 1187.5000 | 312.5000 | 16799928 B |
+|           StringBuilder | 53.153 ms | 2.2890 ms | 3.4260 ms | 2888.8889 | 1111.1111 | 222.2222 | 16799926 B |
+|         CompositeFormat | 21.679 ms | 0.1913 ms | 0.2682 ms | 2062.5000 |  781.2500 | 156.2500 | 11999930 B |
+| CompositeFormatWithSpan |  8.499 ms | 0.0866 ms | 0.1242 ms |         - |         - |        - |          - |
+|             StringMaker | 10.090 ms | 0.1418 ms | 0.2078 ms | 5546.8750 |         - |        - | 23199600 B |
+|     StringMakerWithSpan |  8.371 ms | 0.0569 ms | 0.0779 ms | 2671.8750 |         - |        - | 11199680 B |
 
 ```
 
