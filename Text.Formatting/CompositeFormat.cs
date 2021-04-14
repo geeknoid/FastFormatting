@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 [assembly: InternalsVisibleTo("Text.Formatting.Test")]
 [assembly: InternalsVisibleTo("Text.Formatting.Bench")]
@@ -60,6 +59,146 @@ namespace Text
             var l = new List<string>();
             (_segments, NumArgumentsNeeded, LiteralString) = Parse(format, l);
             templates = l;
+        }
+
+        internal static int EstimateArgSize<T>(T arg)
+        {
+            var str = arg as string;
+            if (str != null)
+            {
+                return str.Length;
+            }
+
+            return 8;
+        }
+
+        internal static int EstimateArgSize(object?[]? args)
+        {
+            int total = 0;
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    if (arg is string str)
+                    {
+                        total += str.Length;
+                    }
+                }
+            }
+
+            return total;
+        }
+
+        internal void CheckNumArgs(int explicitCount, object?[]? args)
+        {
+            var total = explicitCount;
+            if (args != null)
+            {
+                total += args.Length;
+            }
+
+            if (NumArgumentsNeeded != total)
+            {
+                throw new ArgumentException($"Expected {NumArgumentsNeeded} arguments, but got {total}");
+            }
+        }
+
+        private static void AppendArg<T>(ref StringMaker sm, T arg, string argFormat, IFormatProvider? provider, int argWidth)
+        {
+            switch (arg)
+            {
+                case int a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case long a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case string a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case double a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case float a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case uint a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case ulong a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case short a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case ushort a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case byte a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case sbyte a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case bool a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case char a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                case decimal a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case DateTime a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case TimeSpan a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case ISpanFormattable a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case IFormattable a:
+                    sm.Append(a, argFormat, provider, argWidth);
+                    break;
+
+                case object a:
+                    sm.Append(a, argWidth);
+                    break;
+
+                default:
+                    // when arg == null
+                    sm.Append(string.Empty, argWidth);
+                    break;
+            }
+        }
+
+        private static bool ValidTemplateNameChar(char ch, bool first)
+        {
+            if (first)
+            {
+                return char.IsLetter(ch) || ch == '_';
+            }
+
+            return char.IsLetterOrDigit(ch) || ch == '_';
         }
 
         private static (Segment[] segments, int numArgsRequired, string literalString) Parse(ReadOnlySpan<char> format, List<string>? templates)
@@ -346,49 +485,6 @@ namespace Text
             }
         }
 
-        internal static int EstimateArgSize<T>(T arg)
-        {
-            var str = arg as string;
-            if (str != null)
-            {
-                return str.Length;
-            }
-
-            return 8;
-        }
-
-        internal static int EstimateArgSize(object?[]? args)
-        {
-            int total = 0;
-
-            if (args != null)
-            {
-                foreach (var arg in args)
-                {
-                    if (arg is string str)
-                    {
-                        total += str.Length;
-                    }
-                }
-            }
-
-            return total;
-        }
-
-        internal void CheckNumArgs(int explicitCount, object?[]? args)
-        {
-            var total = explicitCount;
-            if (args != null)
-            {
-                total += args.Length;
-            }
-
-            if (NumArgumentsNeeded != total)
-            {
-                throw new ArgumentException($"Expected {NumArgumentsNeeded} arguments, but got {total}");
-            }
-        }
-
         private void CoreFmt<T0, T1, T2>(ref StringMaker sm, IFormatProvider? provider, T0 arg0, T1 arg1, T2 arg2, ReadOnlySpan<object?> args)
         {
             var literalIndex = 0;
@@ -428,110 +524,13 @@ namespace Text
             }
         }
 
-        private static void AppendArg<T>(ref StringMaker sm, T arg, string argFormat, IFormatProvider? provider, int argWidth)
-        {
-            switch (arg)
-            {
-                case int a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case long a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case string a:
-                    sm.Append(a, argWidth);
-                    break;
-
-                case double a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case float a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case uint a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case ulong a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case short a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case ushort a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case byte a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case sbyte a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case bool a:
-                    sm.Append(a, argWidth);
-                    break;
-
-                case char a:
-                    sm.Append(a, argWidth);
-                    break;
-
-                case decimal a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case DateTime a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case TimeSpan a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case ISpanFormattable a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case IFormattable a:
-                    sm.Append(a, argFormat, provider, argWidth);
-                    break;
-
-                case object a:
-                    sm.Append(a, argWidth);
-                    break;
-
-                default:
-                    // when arg == null
-                    sm.Append(string.Empty, argWidth);
-                    break;
-            }
-        }
-
-        private static bool ValidTemplateNameChar(char ch, bool first)
-        {
-            if (first)
-            {
-                return char.IsLetter(ch) || ch == '_';
-            }
-
-            return char.IsLetterOrDigit(ch) || ch == '_';
-        }
-
         /// <summary>
         /// Gets the number of arguments required in order to produce a string with this instance.
         /// </summary>
         public int NumArgumentsNeeded { get; }
 
         /// <summary>
-        /// All literal text to be inserted into the output.
+        /// Gets all literal text to be inserted into the output.
         /// </summary>
         /// <remarks>
         /// In the case where the format string doesn't contain any formatting

@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Text
 {
-#if PUBLIC_STRINGMAKERX
+#if PUBLIC_STRINGMAKER
     public
 #else
     internal

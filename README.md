@@ -3,7 +3,7 @@
 This project is a proof-of-concept showing how to substantially improve string formatting performance in .NET.
 There are two new types to support faster formatting:
 
-* The `CompositeFormat` type is built is designed to support the
+* The `CompositeFormat` type is designed to support the
 normal .NET composite formatting model, such as you use with `String.Format`. The type splits
 the normal formatting step in two in order to boost performance of the formatting process. 
 The first step is parsing the composite format string into an efficient form. This step is done

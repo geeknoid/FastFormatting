@@ -60,6 +60,5 @@ namespace Text
             sm.Dispose();
             return sb;
         }
-
     }
 }
